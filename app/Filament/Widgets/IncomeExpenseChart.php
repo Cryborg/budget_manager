@@ -39,7 +39,7 @@ class IncomeExpenseChart extends ChartWidget
      */
     private function isYearlyOccurence(Carbon $currentDate, Carbon $originalDate): bool
     {
-        return $currentDate->month === $originalDate->month;
+        return $currentDate->month === $originalDate->month && $currentDate->year >= $originalDate->year;
     }
 
     /**
@@ -54,6 +54,74 @@ class IncomeExpenseChart extends ChartWidget
             'yearly' => $currentDate->diffInYears($endDate) + 1,
             default => 0,
         };
+    }
+
+    /**
+     * Ajoute les contraintes de date selon la fréquence à une requête
+     */
+    private function addDateConstraints($query, Carbon $date)
+    {
+        return $query->where(function ($q) use ($date) {
+            $q->where(function ($subQ) use ($date) {
+                // Pour les éléments non-annuels, utiliser start_date normalement
+                $subQ->where('frequency', '!=', 'yearly')
+                    ->where(function ($dateQ) use ($date) {
+                        $dateQ->whereNull('start_date')
+                            ->orWhere('start_date', '<=', $date->endOfMonth());
+                    });
+            })
+            ->orWhere(function ($subQ) use ($date) {
+                // Pour les éléments annuels, vérifier que la date d'occurrence est dans le passé ou présent
+                $subQ->where('frequency', 'yearly')
+                    ->where(function ($dateQ) use ($date) {
+                        $dateQ->whereNull('start_date')
+                            ->orWhere(function ($yearlyQ) use ($date) {
+                                $yearlyQ->whereRaw('MONTH(start_date) = ?', [$date->month])
+                                    ->whereRaw('YEAR(start_date) <= ?', [$date->year]);
+                            });
+                    });
+            });
+        });
+    }
+
+    /**
+     * Génère les détails pour le tooltip en comparant les données actuelles et précédentes
+     */
+    private function generateTooltipDetails(array $currentItems, array $previousItems, $allItems, Carbon $date, string $terminatedLabel): array
+    {
+        $details = [];
+
+        foreach ($currentItems as $name => $amount) {
+            // Récupérer l'item pour vérifier s'il a une date de fin
+            $item = $allItems->firstWhere('name', $name);
+            $hasEndDate = $item && $item->end_date;
+
+            if (!isset($previousItems[$name])) {
+                // Nouvel item
+                $details[] = '• ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' € (nouveau' . ($terminatedLabel === 'terminée' ? 'elle' : '') . ')';
+            } elseif ($previousItems[$name] != $amount) {
+                // Item modifié
+                $diff = $amount - $previousItems[$name];
+                $sign = $diff > 0 ? '+' : '';
+                $details[] = '• ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' € (' . $sign . number_format($diff, 2, ',', ' ') . ' €)';
+            } elseif ($hasEndDate && $item->end_date) {
+                // Item temporaire inchangé (a une date de fin)
+                $endDate = $item->end_date->format('d/m/Y');
+                $remainingPayments = $this->calculateRemainingPayments($item->frequency, $date, $item->end_date);
+                $details[] = '• ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' €';
+                $details[] = '   ◦ Fin le : ' . $endDate;
+                $details[] = '   ◦ Échéances restantes : ' . $remainingPayments;
+            }
+        }
+
+        // Items qui se terminent ce mois
+        foreach ($previousItems as $name => $amount) {
+            if (!isset($currentItems[$name])) {
+                $details[] = '• ' . $name . ' : ' . $terminatedLabel;
+            }
+        }
+
+        return $details;
     }
 
     protected function getFilters(): ?array
@@ -87,17 +155,15 @@ class IncomeExpenseChart extends ChartWidget
             $labels[] = $date->format('M Y');
 
             // Calculer tous les revenus pour ce mois (toutes fréquences)
-            $allIncomes = Income::where('is_active', true)
-                ->where('frequency', '!=', 'once') // Exclure les revenus ponctuels
-                ->where(function ($q) use ($date) {
-                    $q->whereNull('start_date')
-                        ->orWhere('start_date', '<=', $date->endOfMonth());
-                })
-                ->where(function ($q) use ($date) {
-                    $q->whereNull('end_date')
-                        ->orWhere('end_date', '>=', $date->startOfMonth());
-                })
-                ->get();
+            $allIncomes = $this->addDateConstraints(
+                Income::where('is_active', true)->where('frequency', '!=', 'once'),
+                $date
+            )
+            ->where(function ($q) use ($date) {
+                $q->whereNull('end_date')
+                    ->orWhere('end_date', '>=', $date->startOfMonth());
+            })
+            ->get();
 
             $monthlyIncomes = 0;
             $currentIncomes = [];
@@ -111,55 +177,19 @@ class IncomeExpenseChart extends ChartWidget
                 }
             }
 
-            // Afficher seulement les changements et les revenus temporaires (avec date de fin)
-            $incomeDetailForMonth = [];
-
-            foreach ($currentIncomes as $name => $amount) {
-                // Récupérer le revenu pour vérifier s'il a une date de fin
-                $incomeItem = $allIncomes->firstWhere('name', $name);
-                $hasEndDate = $incomeItem && $incomeItem->end_date;
-
-                if (! isset($previousIncomes[$name])) {
-                    // Nouveau revenu
-                    $incomeDetailForMonth[] = '• '.$name;
-                    $incomeDetailForMonth[] = '   → '.number_format($amount, 2, ',', ' ').' € (nouveau)';
-                } elseif ($previousIncomes[$name] != $amount) {
-                    // Revenu modifié
-                    $diff = $amount - $previousIncomes[$name];
-                    $sign = $diff > 0 ? '+' : '';
-                    $incomeDetailForMonth[] = '• '.$name;
-                    $incomeDetailForMonth[] = '   → '.number_format($amount, 2, ',', ' ').' € ('.$sign.number_format($diff, 2, ',', ' ').' €)';
-                } elseif ($hasEndDate && $incomeItem->end_date) {
-                    // Revenu temporaire inchangé (a une date de fin)
-                    $endDate = $incomeItem->end_date->format('d/m/Y');
-                    $remainingPayments = $this->calculateRemainingPayments($incomeItem->frequency, $date, $incomeItem->end_date);
-                    $incomeDetailForMonth[] = '• '.$name;
-                    $incomeDetailForMonth[] = '   → '.number_format($amount, 2, ',', ' ').' €';
-                    $incomeDetailForMonth[] = '   ◦ Fin le : '.$endDate;
-                    $incomeDetailForMonth[] = '   ◦ Échéances restantes : '.$remainingPayments;
-                }
-            }
-
-            // Revenus qui se terminent ce mois
-            foreach ($previousIncomes as $name => $amount) {
-                if (! isset($currentIncomes[$name])) {
-                    $incomeDetailForMonth[] = '• '.$name;
-                    $incomeDetailForMonth[] = '   → terminé';
-                }
-            }
+            // Générer les détails des revenus pour le tooltip
+            $incomeDetailForMonth = $this->generateTooltipDetails($currentIncomes, $previousIncomes, $allIncomes, $date, 'terminé');
 
             // Calculer toutes les dépenses pour ce mois (toutes fréquences)
-            $allExpenses = Expense::where('is_active', true)
-                ->where('frequency', '!=', 'once') // Exclure les dépenses ponctuelles
-                ->where(function ($q) use ($date) {
-                    $q->whereNull('start_date')
-                        ->orWhere('start_date', '<=', $date->endOfMonth());
-                })
-                ->where(function ($q) use ($date) {
-                    $q->whereNull('end_date')
-                        ->orWhere('end_date', '>=', $date->startOfMonth());
-                })
-                ->get();
+            $allExpenses = $this->addDateConstraints(
+                Expense::where('is_active', true)->where('frequency', '!=', 'once'),
+                $date
+            )
+            ->where(function ($q) use ($date) {
+                $q->whereNull('end_date')
+                    ->orWhere('end_date', '>=', $date->startOfMonth());
+            })
+            ->get();
 
             $monthlyExpenses = 0;
             $currentExpenses = [];
@@ -173,42 +203,8 @@ class IncomeExpenseChart extends ChartWidget
                 }
             }
 
-            // Afficher seulement les changements et les dépenses temporaires (avec date de fin)
-            $expenseDetailForMonth = [];
-
-            foreach ($currentExpenses as $name => $amount) {
-                // Récupérer la dépense pour vérifier si elle a une date de fin
-                $expenseItem = $allExpenses->firstWhere('name', $name);
-                $hasEndDate = $expenseItem && $expenseItem->end_date;
-
-                if (! isset($previousExpenses[$name])) {
-                    // Nouvelle dépense
-                    $expenseDetailForMonth[] = '• '.$name;
-                    $expenseDetailForMonth[] = '   → '.number_format($amount, 2, ',', ' ').' € (nouvelle)';
-                } elseif ($previousExpenses[$name] != $amount) {
-                    // Dépense modifiée
-                    $diff = $amount - $previousExpenses[$name];
-                    $sign = $diff > 0 ? '+' : '';
-                    $expenseDetailForMonth[] = '• '.$name;
-                    $expenseDetailForMonth[] = '   → '.number_format($amount, 2, ',', ' ').' € ('.$sign.number_format($diff, 2, ',', ' ').' €)';
-                } elseif ($hasEndDate && $expenseItem->end_date) {
-                    // Dépense temporaire inchangée (a une date de fin)
-                    $endDate = $expenseItem->end_date->format('d/m/Y');
-                    $remainingPayments = $this->calculateRemainingPayments($expenseItem->frequency, $date, $expenseItem->end_date);
-                    $expenseDetailForMonth[] = '• '.$name;
-                    $expenseDetailForMonth[] = '   → '.number_format($amount, 2, ',', ' ').' €';
-                    $expenseDetailForMonth[] = '   ◦ Fin le : '.$endDate;
-                    $expenseDetailForMonth[] = '   ◦ Échéances restantes : '.$remainingPayments;
-                }
-            }
-
-            // Dépenses qui se terminent ce mois
-            foreach ($previousExpenses as $name => $amount) {
-                if (! isset($currentExpenses[$name])) {
-                    $expenseDetailForMonth[] = '• '.$name;
-                    $expenseDetailForMonth[] = '   → terminée';
-                }
-            }
+            // Générer les détails des dépenses pour le tooltip
+            $expenseDetailForMonth = $this->generateTooltipDetails($currentExpenses, $previousExpenses, $allExpenses, $date, 'terminée');
 
             $incomeData[] = round($monthlyIncomes, 2);
             $expenseData[] = round($monthlyExpenses, 2);

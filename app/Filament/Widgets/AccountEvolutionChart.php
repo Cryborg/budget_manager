@@ -39,7 +39,26 @@ class AccountEvolutionChart extends ChartWidget
      */
     private function isYearlyOccurence(Carbon $currentDate, Carbon $originalDate): bool
     {
-        return $currentDate->month === $originalDate->month;
+        return $currentDate->month === $originalDate->month && $currentDate->year >= $originalDate->year;
+    }
+
+    /**
+     * Vérifie si un élément (income/expense/transfer) est actif pour une date donnée
+     */
+    private function isItemActiveForDate($item, Carbon $date): bool
+    {
+        if ($item->frequency === 'yearly') {
+            // Pour les éléments annuels, vérifier que la date d'occurrence est dans le passé ou présent
+            $startDateCheck = $item->start_date === null || 
+                ($item->start_date->month === $date->month && $item->start_date->year <= $date->year);
+        } else {
+            // Pour les autres fréquences, logique normale
+            $startDateCheck = $item->start_date === null || $item->start_date <= $date->endOfMonth();
+        }
+        
+        $endDateCheck = $item->end_date === null || $item->end_date >= $date->startOfMonth();
+        
+        return $startDateCheck && $endDateCheck;
     }
 
     protected function getFilters(): ?array
@@ -146,9 +165,7 @@ class AccountEvolutionChart extends ChartWidget
 
                     $monthlyIncomes = 0;
                     foreach ($accountIncomes as $income) {
-                        // Vérifier si l'income est actif pour cette période
-                        if (($income->start_date === null || $income->start_date <= $date->endOfMonth()) &&
-                            ($income->end_date === null || $income->end_date >= $date->startOfMonth())) {
+                        if ($this->isItemActiveForDate($income, $date)) {
                             $monthlyIncomes += $this->getAmountForMonth($income->amount, $income->frequency, $date, $income->date);
                         }
                     }
@@ -158,9 +175,7 @@ class AccountEvolutionChart extends ChartWidget
 
                     $monthlyExpenses = 0;
                     foreach ($accountExpenses as $expense) {
-                        // Vérifier si l'expense est actif pour cette période
-                        if (($expense->start_date === null || $expense->start_date <= $date->endOfMonth()) &&
-                            ($expense->end_date === null || $expense->end_date >= $date->startOfMonth())) {
+                        if ($this->isItemActiveForDate($expense, $date)) {
                             $monthlyExpenses += $this->getAmountForMonth($expense->amount, $expense->frequency, $date, $expense->date);
                         }
                     }
@@ -170,9 +185,7 @@ class AccountEvolutionChart extends ChartWidget
 
                     $transfersIn = 0;
                     foreach ($accountTransfersIn as $transfer) {
-                        // Vérifier si le transfer est actif pour cette période
-                        if (($transfer->start_date === null || $transfer->start_date <= $date->endOfMonth()) &&
-                            ($transfer->end_date === null || $transfer->end_date >= $date->startOfMonth())) {
+                        if ($this->isItemActiveForDate($transfer, $date)) {
                             $transfersIn += $this->getAmountForMonth($transfer->amount, $transfer->frequency, $date, $transfer->date);
                         }
                     }
@@ -182,9 +195,7 @@ class AccountEvolutionChart extends ChartWidget
 
                     $transfersOut = 0;
                     foreach ($accountTransfersOut as $transfer) {
-                        // Vérifier si le transfer est actif pour cette période
-                        if (($transfer->start_date === null || $transfer->start_date <= $date->endOfMonth()) &&
-                            ($transfer->end_date === null || $transfer->end_date >= $date->startOfMonth())) {
+                        if ($this->isItemActiveForDate($transfer, $date)) {
                             $transfersOut += $this->getAmountForMonth($transfer->amount, $transfer->frequency, $date, $transfer->date);
                         }
                     }
