@@ -43,12 +43,40 @@ class TransferResource extends Resource
             ->schema([
                 Forms\Components\Select::make('from_account_id')
                     ->label('Compte émetteur')
-                    ->relationship('fromAccount', 'name')
-                    ->required(),
+                    ->relationship('fromAccount', 'name', function ($query) {
+                        return $query->where('user_id', auth()->id());
+                    })
+                    ->required()
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                if (!$value) return;
+                                
+                                $account = \App\Models\BankAccount::find($value);
+                                if (!$account || $account->user_id !== auth()->id()) {
+                                    $fail('Le compte émetteur sélectionné ne vous appartient pas.');
+                                }
+                            };
+                        }
+                    ]),
                 Forms\Components\Select::make('to_account_id')
                     ->label('Compte destinataire')
-                    ->relationship('toAccount', 'name')
-                    ->required(),
+                    ->relationship('toAccount', 'name', function ($query) {
+                        return $query->where('user_id', auth()->id());
+                    })
+                    ->required()
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                if (!$value) return;
+                                
+                                $account = \App\Models\BankAccount::find($value);
+                                if (!$account || $account->user_id !== auth()->id()) {
+                                    $fail('Le compte destinataire sélectionné ne vous appartient pas.');
+                                }
+                            };
+                        }
+                    ]),
                 Forms\Components\TextInput::make('name')
                     ->label('Nom')
                     ->required()

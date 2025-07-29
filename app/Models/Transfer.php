@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUserScope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transfer extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUserScope;
 
     protected $fillable = [
         'from_account_id',
@@ -30,6 +32,22 @@ class Transfer extends Model
         'end_date' => 'date',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Filtrer par utilisateur via les relations fromAccount/toAccount
+     * Un transfert est visible si l'utilisateur possède au moins un des deux comptes
+     */
+    protected static function applyUserScopeFilter(Builder $builder, int $userId): void
+    {
+        $builder->where(function (Builder $query) use ($userId) {
+            $query->whereHas('fromAccount', function (Builder $subQuery) use ($userId) {
+                $subQuery->where('user_id', $userId);
+            })
+            ->orWhereHas('toAccount', function (Builder $subQuery) use ($userId) {
+                $subQuery->where('user_id', $userId);
+            });
+        });
+    }
 
     public function fromAccount(): BelongsTo
     {

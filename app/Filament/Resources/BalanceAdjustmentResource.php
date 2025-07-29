@@ -42,9 +42,23 @@ class BalanceAdjustmentResource extends Resource
             ->schema([
                 Forms\Components\Select::make('bank_account_id')
                     ->label('Compte bancaire')
-                    ->relationship('bankAccount', 'name')
+                    ->relationship('bankAccount', 'name', function ($query) {
+                        return $query->where('user_id', auth()->id());
+                    })
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                if (!$value) return;
+                                
+                                $account = \App\Models\BankAccount::find($value);
+                                if (!$account || $account->user_id !== auth()->id()) {
+                                    $fail('Le compte bancaire sélectionné ne vous appartient pas.');
+                                }
+                            };
+                        }
+                    ]),
 
                 Forms\Components\DatePicker::make('adjustment_date')
                     ->label('Date d\'ajustement')

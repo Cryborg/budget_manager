@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUserScope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Income extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUserScope;
 
     protected $fillable = [
         'bank_account_id',
@@ -45,6 +47,16 @@ class Income extends Model
         'end_date' => 'date',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Filtrer par utilisateur via la relation bankAccount
+     */
+    protected static function applyUserScopeFilter(Builder $builder, int $userId): void
+    {
+        $builder->whereHas('bankAccount', function (Builder $query) use ($userId) {
+            $query->where('user_id', $userId);
+        });
+    }
 
     public function bankAccount(): BelongsTo
     {
