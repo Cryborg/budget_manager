@@ -85,7 +85,7 @@ class IncomeExpenseChart extends ChartWidget
     }
 
     /**
-     * Génère les détails pour le tooltip en comparant les données actuelles et précédentes
+     * Génère les détails formatés pour le tooltip en comparant les données actuelles et précédentes
      */
     private function generateTooltipDetails(array $currentItems, array $previousItems, $allItems, Carbon $date, string $terminatedLabel): array
     {
@@ -98,26 +98,27 @@ class IncomeExpenseChart extends ChartWidget
 
             if (!isset($previousItems[$name])) {
                 // Nouvel item
-                $details[] = '• ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' € (nouveau' . ($terminatedLabel === 'terminée' ? 'elle' : '') . ')';
+                $details[] = '🟢 ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' € (nouveau' . ($terminatedLabel === 'terminée' ? 'elle' : '') . ')';
             } elseif ($previousItems[$name] != $amount) {
                 // Item modifié
                 $diff = $amount - $previousItems[$name];
                 $sign = $diff > 0 ? '+' : '';
-                $details[] = '• ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' € (' . $sign . number_format($diff, 2, ',', ' ') . ' €)';
+                $emoji = $diff > 0 ? '🟡' : '🟠';
+                $details[] = $emoji . ' ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' € (' . $sign . number_format($diff, 2, ',', ' ') . ' €)';
             } elseif ($hasEndDate && $item->end_date) {
                 // Item temporaire inchangé (a une date de fin)
                 $endDate = $item->end_date->format('d/m/Y');
                 $remainingPayments = $this->calculateRemainingPayments($item->frequency, $date, $item->end_date);
-                $details[] = '• ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' €';
-                $details[] = '   ◦ Fin le : ' . $endDate;
-                $details[] = '   ◦ Échéances restantes : ' . $remainingPayments;
+                $details[] = '🟠 ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' €';
+                $details[] = '    📅 Fin le : ' . $endDate;
+                $details[] = '    ⏳ Échéances restantes : ' . $remainingPayments;
             }
         }
 
         // Items qui se terminent ce mois
         foreach ($previousItems as $name => $amount) {
             if (!isset($currentItems[$name])) {
-                $details[] = '• ' . $name . ' : ' . $terminatedLabel;
+                $details[] = '🔴 ' . $name . ' : ' . $terminatedLabel;
             }
         }
 
