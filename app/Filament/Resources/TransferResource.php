@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HasCustomLabels;
+use App\Filament\Concerns\HasFinancialTransactionResource;
 use App\Filament\Concerns\HasFrequencyCalculation;
 use App\Filament\Resources\TransferResource\Pages;
 use App\Models\Transfer;
@@ -15,6 +16,7 @@ use Filament\Tables\Table;
 class TransferResource extends Resource
 {
     use HasCustomLabels;
+    use HasFinancialTransactionResource;
     use HasFrequencyCalculation;
 
     protected static ?string $model = Transfer::class;
@@ -43,40 +45,18 @@ class TransferResource extends Resource
             ->schema([
                 Forms\Components\Select::make('from_account_id')
                     ->label('Compte émetteur')
-                    ->relationship('fromAccount', 'name', function ($query) {
-                        return $query->where('user_id', auth()->id());
+                    ->options(function (callable $get) {
+                        return static::getBankAccountOptionsGroupedByBank($get('from_account_id'));
                     })
                     ->required()
-                    ->rules([
-                        function () {
-                            return function (string $attribute, $value, \Closure $fail) {
-                                if (!$value) return;
-                                
-                                $account = \App\Models\BankAccount::find($value);
-                                if (!$account || $account->user_id !== auth()->id()) {
-                                    $fail('Le compte émetteur sélectionné ne vous appartient pas.');
-                                }
-                            };
-                        }
-                    ]),
+                    ->rules([static::getBankAccountValidationRule('from_account_id')]),
                 Forms\Components\Select::make('to_account_id')
                     ->label('Compte destinataire')
-                    ->relationship('toAccount', 'name', function ($query) {
-                        return $query->where('user_id', auth()->id());
+                    ->options(function (callable $get) {
+                        return static::getBankAccountOptionsGroupedByBank($get('to_account_id'));
                     })
                     ->required()
-                    ->rules([
-                        function () {
-                            return function (string $attribute, $value, \Closure $fail) {
-                                if (!$value) return;
-                                
-                                $account = \App\Models\BankAccount::find($value);
-                                if (!$account || $account->user_id !== auth()->id()) {
-                                    $fail('Le compte destinataire sélectionné ne vous appartient pas.');
-                                }
-                            };
-                        }
-                    ]),
+                    ->rules([static::getBankAccountValidationRule('to_account_id')]),
                 Forms\Components\TextInput::make('name')
                     ->label('Nom')
                     ->required()
@@ -107,10 +87,46 @@ class TransferResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('fromAccount.name')
                     ->label('De')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder {
+                        $tableName = $query->getModel()->getTable();
+                        return $query
+                            ->leftJoin('bank_accounts as from_accounts', function ($join) use ($tableName) {
+                                $join->on('from_accounts.id', '=', $tableName . '.from_account_id');
+                            })
+                            ->leftJoin('banks as from_banks', 'from_banks.id', '=', 'from_accounts.bank_id')
+                            ->orderBy('from_banks.name', $direction)
+                            ->orderBy('from_accounts.name', $direction)
+                            ->select($tableName . '.*');
+                    })
+                    ->formatStateUsing(function ($record) {
+                        return $record->fromAccount->name . 
+                            '<br><span class="text-xs text-gray-500">' . 
+                            $record->fromAccount->bank->name . 
+                            '</span>';
+                    })
+                    ->html(),
                 Tables\Columns\TextColumn::make('toAccount.name')
                     ->label('Vers')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder {
+                        $tableName = $query->getModel()->getTable();
+                        return $query
+                            ->leftJoin('bank_accounts as to_accounts', function ($join) use ($tableName) {
+                                $join->on('to_accounts.id', '=', $tableName . '.to_account_id');
+                            })
+                            ->leftJoin('banks as to_banks', 'to_banks.id', '=', 'to_accounts.bank_id')
+                            ->orderBy('to_banks.name', $direction)
+                            ->orderBy('to_accounts.name', $direction)
+                            ->select($tableName . '.*');
+                    })
+                    ->formatStateUsing(function ($record) {
+                        return $record->toAccount->name . 
+                            '<br><span class="text-xs text-gray-500">' . 
+                            $record->toAccount->bank->name . 
+                            '</span>';
+                    })
+                    ->html(),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
                     ->money('EUR')

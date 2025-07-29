@@ -22,12 +22,14 @@ class BankAccount extends Model
         'initial_balance',
         'account_number',
         'is_active',
+        'blocked_at',
     ];
 
     protected $casts = [
         'current_balance' => 'float',
         'initial_balance' => 'float',
         'is_active' => 'boolean',
+        'blocked_at' => 'date',
     ];
 
     protected static function booted()
@@ -72,5 +74,21 @@ class BankAccount extends Model
     public function balanceAdjustments(): HasMany
     {
         return $this->hasMany(BalanceAdjustment::class);
+    }
+
+    /**
+     * Vérifie si le compte est actuellement bloqué
+     */
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null && $this->blocked_at->isAfter(now()->startOfDay());
+    }
+
+    /**
+     * Vérifie si le compte est disponible pour les transactions
+     */
+    public function isAvailableForTransactions(): bool
+    {
+        return $this->is_active && !$this->isBlocked();
     }
 }

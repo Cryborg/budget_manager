@@ -69,6 +69,9 @@ class BankAccountResource extends Resource
                 Forms\Components\TextInput::make('account_number')
                     ->label('Numéro de compte')
                     ->maxLength(255),
+                Forms\Components\DatePicker::make('blocked_at')
+                    ->label('Bloqué jusqu\'au')
+                    ->helperText('Laisser vide si le compte n\'est pas bloqué. Utile pour les épargnes bloquées, investissements, etc.'),
                 Forms\Components\Toggle::make('is_active')
                     ->label('Actif')
                     ->default(true),
@@ -97,6 +100,11 @@ class BankAccountResource extends Resource
                 Tables\Columns\TextColumn::make('current_balance')
                     ->label('Solde actuel')
                     ->money('EUR')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('blocked_at')
+                    ->label('Bloqué jusqu\'au')
+                    ->date()
+                    ->placeholder('Non bloqué')
                     ->sortable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Actif')
