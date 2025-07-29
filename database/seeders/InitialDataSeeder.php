@@ -55,6 +55,9 @@ class InitialDataSeeder extends Seeder
             'type' => 'current',
             'current_balance' => 5900.00, // Fin juillet à +5900€
             'initial_balance' => 0.00,
+            'account_number' => null,
+            'is_active' => true,
+            'blocked_at' => null,
         ]);
 
         $boursoLivretA = BankAccount::create([
@@ -63,6 +66,9 @@ class InitialDataSeeder extends Seeder
             'type' => 'savings',
             'current_balance' => 10.00,
             'initial_balance' => 10.00,
+            'account_number' => null,
+            'is_active' => true,
+            'blocked_at' => null,
         ]);
 
         $boursoLDDS = BankAccount::create([
@@ -71,6 +77,9 @@ class InitialDataSeeder extends Seeder
             'type' => 'savings',
             'current_balance' => 10.00,
             'initial_balance' => 10.00,
+            'account_number' => null,
+            'is_active' => true,
+            'blocked_at' => null,
         ]);
 
         $boursoInternet = BankAccount::create([
@@ -79,6 +88,9 @@ class InitialDataSeeder extends Seeder
             'type' => 'current',
             'current_balance' => 90.00,
             'initial_balance' => 0.00,
+            'account_number' => null,
+            'is_active' => true,
+            'blocked_at' => null,
         ]);
 
         $natixisPEI = BankAccount::create([
@@ -87,6 +99,9 @@ class InitialDataSeeder extends Seeder
             'type' => 'investment',
             'current_balance' => 621.67,
             'initial_balance' => 0.00,
+            'account_number' => null,
+            'is_active' => true,
+            'blocked_at' => Carbon::parse('2028-06-01'),
         ]);
 
         $natixisPERCOLI = BankAccount::create([
@@ -95,6 +110,9 @@ class InitialDataSeeder extends Seeder
             'type' => 'investment',
             'current_balance' => 0.00,
             'initial_balance' => 0.00,
+            'account_number' => null,
+            'is_active' => true,
+            'blocked_at' => Carbon::parse('2028-06-01'),
         ]);
 
         // Revenus
@@ -106,7 +124,9 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::now()->startOfMonth(),
             'frequency' => 'monthly',
             'start_date' => Carbon::now()->startOfMonth(),
+            'end_date' => null,
             'category' => 'Salaire',
+            'is_active' => true,
         ]);
 
         Income::create([
@@ -117,7 +137,9 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::now()->startOfMonth(),
             'frequency' => 'monthly',
             'start_date' => Carbon::now()->startOfMonth(),
+            'end_date' => null,
             'category' => 'Remboursement',
+            'is_active' => true,
         ]);
 
         Income::create([
@@ -128,38 +150,56 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::now()->startOfYear(),
             'frequency' => 'yearly',
             'start_date' => Carbon::now()->startOfYear(),
+            'end_date' => null,
             'category' => 'Abondement',
+            'is_active' => true,
         ]);
 
         // Dépenses fixes BNP
         $expensesBnp = [
-            ['name' => 'Loyer', 'amount' => 1045.00],
-            ['name' => 'Pension', 'amount' => 611.92],
-            ['name' => 'Crédit Tesla', 'amount' => 393.00],
-            ['name' => 'Électricité', 'amount' => 80.00],
-            ['name' => 'Gaz', 'amount' => 70.00],
-            ['name' => 'Assurance maison', 'amount' => 23.00],
-            ['name' => 'Assurance Tesla', 'amount' => 51.00],
-            ['name' => 'Abonnement Tesla', 'amount' => 10.00],
-            ['name' => 'Keepcool (x2)', 'amount' => 50.00],
-            ['name' => 'Remboursement Papa', 'amount' => 500.00],
-            ['name' => 'Préfon', 'amount' => 52.50],
+            ['name' => 'Loyer', 'amount' => 1045.00, 'end_date' => null],
+            ['name' => 'Pension', 'amount' => 611.92, 'end_date' => Carbon::parse('2032-01-01')],
+            ['name' => 'Crédit Tesla', 'amount' => 393.00, 'end_date' => Carbon::parse('2030-09-01')],
+            ['name' => 'Assurance maison', 'amount' => 23.00, 'end_date' => null],
+            ['name' => 'Assurance Tesla', 'amount' => 51.00, 'end_date' => null],
+            ['name' => 'Abonnement Tesla', 'amount' => 10.00, 'end_date' => null],
+            ['name' => 'Keepcool (x2)', 'amount' => 50.00, 'end_date' => null],
+            ['name' => 'Préfon', 'amount' => 52.50, 'end_date' => null],
         ];
 
         foreach ($expensesBnp as $expense) {
             Expense::create([
                 'bank_account_id' => $bnpCourant->id,
                 'name' => $expense['name'],
+                'description' => null,
                 'amount' => $expense['amount'],
                 'date' => Carbon::now()->startOfMonth(),
                 'frequency' => 'monthly',
                 'start_date' => Carbon::now()->startOfMonth(),
+                'end_date' => $expense['end_date'],
                 'category' => 'Fixe',
+                'is_active' => true,
             ]);
         }
 
+        // Remboursement Papa séparé car il a des dates spéciales
+        Expense::create([
+            'bank_account_id' => $bnpCourant->id,
+            'name' => 'Remboursement Papa',
+            'description' => null,
+            'amount' => 500.00,
+            'date' => Carbon::parse('2025-08-05'),
+            'frequency' => 'monthly',
+            'start_date' => Carbon::parse('2025-08-05'),
+            'end_date' => Carbon::parse('2026-04-01'),
+            'category' => 'Fixe',
+            'is_active' => true,
+        ]);
+
         // Dépenses Boursobank
         $expensesBourso = [
+            ['name' => 'Électricité', 'amount' => 80.00],
+            ['name' => 'Gaz', 'amount' => 70.00],
             ['name' => 'Box internet', 'amount' => 30.00],
             ['name' => 'Téléphone', 'amount' => 10.00],
             ['name' => 'Assurance voiture Enora', 'amount' => 38.00],
@@ -169,11 +209,14 @@ class InitialDataSeeder extends Seeder
             Expense::create([
                 'bank_account_id' => $boursoInternet->id,
                 'name' => $expense['name'],
+                'description' => null,
                 'amount' => $expense['amount'],
                 'date' => Carbon::now()->startOfMonth(),
                 'frequency' => 'monthly',
                 'start_date' => Carbon::now()->startOfMonth(),
+                'end_date' => null,
                 'category' => 'Fixe',
+                'is_active' => true,
             ]);
         }
 
@@ -186,7 +229,9 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::now()->startOfMonth(),
             'frequency' => 'monthly',
             'start_date' => Carbon::now()->startOfMonth(),
+            'end_date' => null,
             'category' => 'Transport',
+            'is_active' => true,
         ]);
 
         Expense::create([
@@ -197,7 +242,9 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::now()->startOfMonth(),
             'frequency' => 'monthly',
             'start_date' => Carbon::now()->startOfMonth(),
+            'end_date' => null,
             'category' => 'Alimentation',
+            'is_active' => true,
         ]);
 
         // Chèque dentiste ponctuel
@@ -208,7 +255,10 @@ class InitialDataSeeder extends Seeder
             'amount' => 386.00,
             'date' => Carbon::now()->addDays(5), // Pour août
             'frequency' => 'once',
+            'start_date' => null,
+            'end_date' => null,
             'category' => 'Santé',
+            'is_active' => true,
         ]);
 
         // Virements épargne mensuels à partir d'août
@@ -221,6 +271,8 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::parse('2024-08-01'),
             'frequency' => 'monthly',
             'start_date' => Carbon::parse('2024-08-01'),
+            'end_date' => null,
+            'is_active' => true,
         ]);
 
         Transfer::create([
@@ -232,6 +284,8 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::parse('2024-08-01'),
             'frequency' => 'monthly',
             'start_date' => Carbon::parse('2024-08-01'),
+            'end_date' => null,
+            'is_active' => true,
         ]);
 
         Transfer::create([
@@ -243,6 +297,8 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::now()->startOfMonth(),
             'frequency' => 'monthly',
             'start_date' => Carbon::now()->startOfMonth(),
+            'end_date' => null,
+            'is_active' => true,
         ]);
 
         Transfer::create([
@@ -254,6 +310,8 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::now()->startOfMonth(),
             'frequency' => 'monthly',
             'start_date' => Carbon::now()->startOfMonth(),
+            'end_date' => null,
+            'is_active' => true,
         ]);
 
         Transfer::create([
@@ -265,6 +323,8 @@ class InitialDataSeeder extends Seeder
             'date' => Carbon::now()->startOfMonth(),
             'frequency' => 'monthly',
             'start_date' => Carbon::now()->startOfMonth(),
+            'end_date' => null,
+            'is_active' => true,
         ]);
 
         // Se déconnecter après les seeds
