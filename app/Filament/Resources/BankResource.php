@@ -2,32 +2,31 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasCustomLabels;
 use App\Filament\Resources\BankResource\Pages;
-use App\Filament\Resources\BankResource\RelationManagers;
 use App\Models\Bank;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BankResource extends Resource
 {
+    use HasCustomLabels;
+
     protected static ?string $model = Bank::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-library';
+
     protected static ?string $navigationLabel = 'Banques';
-    protected static ?string $modelLabel = 'banque';
-    protected static ?string $pluralModelLabel = 'banques';
-    
-    public static function getModelLabel(): string
+
+    public static function getSingularLabel(): string
     {
         return 'banque';
     }
-    
-    public static function getPluralModelLabel(): string  
+
+    public static function getPluralLabel(): string
     {
         return 'banques';
     }

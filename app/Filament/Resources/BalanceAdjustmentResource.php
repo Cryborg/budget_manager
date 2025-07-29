@@ -3,34 +3,31 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BalanceAdjustmentResource\Pages;
-use App\Filament\Resources\BalanceAdjustmentResource\RelationManagers;
 use App\Models\BalanceAdjustment;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BalanceAdjustmentResource extends Resource
 {
     protected static ?string $model = BalanceAdjustment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
-    
+
     protected static ?string $navigationLabel = 'Ajustements de solde';
-    
+
     protected static ?string $modelLabel = 'ajustement de solde';
-    
+
     protected static ?string $pluralModelLabel = 'ajustements de solde';
-    
+
     public static function getModelLabel(): string
     {
         return 'ajustement de solde';
     }
-    
-    public static function getPluralModelLabel(): string  
+
+    public static function getPluralModelLabel(): string
     {
         return 'ajustements de solde';
     }
@@ -44,24 +41,24 @@ class BalanceAdjustmentResource extends Resource
                     ->relationship('bankAccount', 'name')
                     ->preload()
                     ->required(),
-                
+
                 Forms\Components\DatePicker::make('adjustment_date')
                     ->label('Date d\'ajustement')
                     ->required()
                     ->default(now()),
-                
+
                 Forms\Components\TextInput::make('actual_balance')
                     ->label('Solde réel')
                     ->prefix('€')
                     ->numeric()
                     ->required()
                     ->step(0.01),
-                
+
                 Forms\Components\Textarea::make('description')
                     ->label('Description')
                     ->placeholder('Raison de l\'ajustement (optionnel)')
                     ->columnSpanFull(),
-                
+
                 Forms\Components\Toggle::make('is_active')
                     ->label('Actif')
                     ->default(true),
@@ -75,26 +72,26 @@ class BalanceAdjustmentResource extends Resource
                 Tables\Columns\TextColumn::make('bankAccount.name')
                     ->label('Compte')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('adjustment_date')
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('actual_balance')
                     ->label('Solde réel')
                     ->money('EUR')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('description')
                     ->label('Description')
                     ->limit(30)
                     ->placeholder('Aucune description'),
-                
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Actif')
                     ->boolean(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Créé le')
                     ->dateTime('d/m/Y H:i')

@@ -9,7 +9,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditTransfer extends EditRecord
 {
     protected static string $resource = TransferResource::class;
-    
+
     public function getTitle(): string
     {
         return 'Modifier le virement';

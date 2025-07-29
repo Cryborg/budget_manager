@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             // Un seul ajustement par compte et par date
             $table->unique(['bank_account_id', 'adjustment_date']);
         });

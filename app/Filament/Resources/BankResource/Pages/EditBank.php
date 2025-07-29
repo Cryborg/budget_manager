@@ -9,7 +9,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditBank extends EditRecord
 {
     protected static string $resource = BankResource::class;
-    
+
     public function getTitle(): string
     {
         return 'Modifier la banque';

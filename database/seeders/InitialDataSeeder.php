@@ -4,11 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Bank;
 use App\Models\BankAccount;
-use App\Models\Income;
 use App\Models\Expense;
+use App\Models\Income;
 use App\Models\Transfer;
-use Illuminate\Database\Seeder;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class InitialDataSeeder extends Seeder
 {
@@ -20,7 +20,7 @@ class InitialDataSeeder extends Seeder
             'code' => 'BNP',
             'color' => '#00A651',
         ]);
-        
+
         $boursobank = Bank::create([
             'name' => 'Boursobank',
             'code' => 'BOURSO',

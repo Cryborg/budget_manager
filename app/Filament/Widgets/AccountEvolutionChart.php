@@ -3,9 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Models\BankAccount;
-use App\Models\BalanceAdjustment;
-use App\Models\Income;
 use App\Models\Expense;
+use App\Models\Income;
 use App\Models\Transfer;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
@@ -16,7 +15,7 @@ class AccountEvolutionChart extends ChartWidget
 
     protected static ?int $sort = 2;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public ?string $filter = '24'; // 24 mois par défaut
 
@@ -25,7 +24,7 @@ class AccountEvolutionChart extends ChartWidget
      */
     private function getAmountForMonth(float $amount, string $frequency, Carbon $date, Carbon $originalDate): float
     {
-        return match($frequency) {
+        return match ($frequency) {
             'once' => 0, // Les montants ponctuels ne sont pas récurrents dans ce contexte
             'daily' => $amount * $date->daysInMonth, // Montant quotidien * nombre de jours dans le mois
             'weekly' => $amount * 4.33, // Approximation : 4.33 semaines par mois
@@ -60,6 +59,31 @@ class AccountEvolutionChart extends ChartWidget
         $months = (int) $this->filter;
         $accounts = BankAccount::with('bank')->where('is_active', true)->get();
 
+        // Charger toutes les données d'un coup pour éviter N+1
+        $allIncomes = Income::with('bankAccount')
+            ->where('is_active', true)
+            ->where('frequency', '!=', 'once')
+            ->get()
+            ->groupBy('bank_account_id');
+
+        $allExpenses = Expense::with('bankAccount')
+            ->where('is_active', true)
+            ->where('frequency', '!=', 'once')
+            ->get()
+            ->groupBy('bank_account_id');
+
+        $allTransfersIn = Transfer::with(['fromAccount', 'toAccount'])
+            ->where('is_active', true)
+            ->where('frequency', '!=', 'once')
+            ->get()
+            ->groupBy('to_account_id');
+
+        $allTransfersOut = Transfer::with(['fromAccount', 'toAccount'])
+            ->where('is_active', true)
+            ->where('frequency', '!=', 'once')
+            ->get()
+            ->groupBy('from_account_id');
+
         $datasets = [];
         $labels = [];
 
@@ -90,11 +114,13 @@ class AccountEvolutionChart extends ChartWidget
             $currentBalance = $account->current_balance; // Partir du solde actuel
 
             // Récupérer tous les ajustements pour ce compte, triés par date
+            /** @var \Illuminate\Support\Collection<string, \App\Models\BalanceAdjustment> $adjustments */
             $adjustments = $account->balanceAdjustments()
                 ->where('is_active', true)
                 ->orderBy('adjustment_date')
                 ->get()
-                ->keyBy(function($item) {
+                ->keyBy(function ($item) {
+                    /** @var \App\Models\BalanceAdjustment $item */
                     return $item->adjustment_date->format('Y-m');
                 });
 
@@ -107,6 +133,7 @@ class AccountEvolutionChart extends ChartWidget
                     $adjustment = $adjustments->get($dateKey);
                     $currentBalance = $adjustment->actual_balance;
                     $data[] = round($currentBalance, 2);
+
                     continue;
                 }
 
@@ -115,79 +142,51 @@ class AccountEvolutionChart extends ChartWidget
                     $monthlyBalance = $currentBalance;
                 } else {
                     // Calculer tous les revenus récurrents pour ce compte (toutes fréquences)
-                    $allIncomes = Income::where('bank_account_id', $account->id)
-                        ->where('is_active', true)
-                        ->where('frequency', '!=', 'once') // Exclure les revenus ponctuels
-                        ->where(function($q) use ($date) {
-                            $q->whereNull('start_date')
-                              ->orWhere('start_date', '<=', $date->endOfMonth());
-                        })
-                        ->where(function($q) use ($date) {
-                            $q->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $date->startOfMonth());
-                        })
-                        ->get();
+                    $accountIncomes = $allIncomes->get($account->id, collect());
 
                     $monthlyIncomes = 0;
-                    foreach ($allIncomes as $income) {
-                        $monthlyIncomes += $this->getAmountForMonth($income->amount, $income->frequency, $date, $income->date);
+                    foreach ($accountIncomes as $income) {
+                        // Vérifier si l'income est actif pour cette période
+                        if (($income->start_date === null || $income->start_date <= $date->endOfMonth()) &&
+                            ($income->end_date === null || $income->end_date >= $date->startOfMonth())) {
+                            $monthlyIncomes += $this->getAmountForMonth($income->amount, $income->frequency, $date, $income->date);
+                        }
                     }
 
                     // Calculer toutes les dépenses récurrentes pour ce compte (toutes fréquences)
-                    $allExpenses = Expense::where('bank_account_id', $account->id)
-                        ->where('is_active', true)
-                        ->where('frequency', '!=', 'once') // Exclure les dépenses ponctuelles
-                        ->where(function($q) use ($date) {
-                            $q->whereNull('start_date')
-                              ->orWhere('start_date', '<=', $date->endOfMonth());
-                        })
-                        ->where(function($q) use ($date) {
-                            $q->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $date->startOfMonth());
-                        })
-                        ->get();
+                    $accountExpenses = $allExpenses->get($account->id, collect());
 
                     $monthlyExpenses = 0;
-                    foreach ($allExpenses as $expense) {
-                        $monthlyExpenses += $this->getAmountForMonth($expense->amount, $expense->frequency, $date, $expense->date);
+                    foreach ($accountExpenses as $expense) {
+                        // Vérifier si l'expense est actif pour cette période
+                        if (($expense->start_date === null || $expense->start_date <= $date->endOfMonth()) &&
+                            ($expense->end_date === null || $expense->end_date >= $date->startOfMonth())) {
+                            $monthlyExpenses += $this->getAmountForMonth($expense->amount, $expense->frequency, $date, $expense->date);
+                        }
                     }
 
                     // Calculer tous les virements entrants récurrents (toutes fréquences)
-                    $allTransfersIn = Transfer::where('to_account_id', $account->id)
-                        ->where('is_active', true)
-                        ->where('frequency', '!=', 'once') // Exclure les virements ponctuels
-                        ->where(function($q) use ($date) {
-                            $q->whereNull('start_date')
-                              ->orWhere('start_date', '<=', $date->endOfMonth());
-                        })
-                        ->where(function($q) use ($date) {
-                            $q->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $date->startOfMonth());
-                        })
-                        ->get();
+                    $accountTransfersIn = $allTransfersIn->get($account->id, collect());
 
                     $transfersIn = 0;
-                    foreach ($allTransfersIn as $transfer) {
-                        $transfersIn += $this->getAmountForMonth($transfer->amount, $transfer->frequency, $date, $transfer->date);
+                    foreach ($accountTransfersIn as $transfer) {
+                        // Vérifier si le transfer est actif pour cette période
+                        if (($transfer->start_date === null || $transfer->start_date <= $date->endOfMonth()) &&
+                            ($transfer->end_date === null || $transfer->end_date >= $date->startOfMonth())) {
+                            $transfersIn += $this->getAmountForMonth($transfer->amount, $transfer->frequency, $date, $transfer->date);
+                        }
                     }
 
                     // Calculer tous les virements sortants récurrents (toutes fréquences)
-                    $allTransfersOut = Transfer::where('from_account_id', $account->id)
-                        ->where('is_active', true)
-                        ->where('frequency', '!=', 'once') // Exclure les virements ponctuels
-                        ->where(function($q) use ($date) {
-                            $q->whereNull('start_date')
-                              ->orWhere('start_date', '<=', $date->endOfMonth());
-                        })
-                        ->where(function($q) use ($date) {
-                            $q->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $date->startOfMonth());
-                        })
-                        ->get();
+                    $accountTransfersOut = $allTransfersOut->get($account->id, collect());
 
                     $transfersOut = 0;
-                    foreach ($allTransfersOut as $transfer) {
-                        $transfersOut += $this->getAmountForMonth($transfer->amount, $transfer->frequency, $date, $transfer->date);
+                    foreach ($accountTransfersOut as $transfer) {
+                        // Vérifier si le transfer est actif pour cette période
+                        if (($transfer->start_date === null || $transfer->start_date <= $date->endOfMonth()) &&
+                            ($transfer->end_date === null || $transfer->end_date >= $date->startOfMonth())) {
+                            $transfersOut += $this->getAmountForMonth($transfer->amount, $transfer->frequency, $date, $transfer->date);
+                        }
                     }
 
                     // Appliquer les changements au solde
@@ -203,7 +202,7 @@ class AccountEvolutionChart extends ChartWidget
                 'label' => $account->name,
                 'data' => $data,
                 'borderColor' => $color,
-                'backgroundColor' => $color . '20',
+                'backgroundColor' => $color.'20',
                 'tension' => 0.3,
                 'fill' => false,
                 'borderWidth' => 2,
@@ -258,7 +257,7 @@ class AccountEvolutionChart extends ChartWidget
                 'padding' => [
                     'top' => 20,
                     'bottom' => 10,
-                ]
+                ],
             ],
             'interaction' => [
                 'intersect' => false,
@@ -280,8 +279,8 @@ class AccountEvolutionChart extends ChartWidget
                         'text' => 'Solde (€)',
                         'font' => [
                             'size' => 14,
-                            'weight' => 'bold'
-                        ]
+                            'weight' => 'bold',
+                        ],
                     ],
                     'ticks' => [
                         'stepSize' => 1000,
@@ -300,8 +299,8 @@ class AccountEvolutionChart extends ChartWidget
                         'text' => 'Période',
                         'font' => [
                             'size' => 14,
-                            'weight' => 'bold'
-                        ]
+                            'weight' => 'bold',
+                        ],
                     ],
                 ],
             ],
@@ -319,10 +318,10 @@ class AccountEvolutionChart extends ChartWidget
                     'displayColors' => true,
                     'titleFont' => [
                         'size' => 14,
-                        'weight' => 'bold'
+                        'weight' => 'bold',
                     ],
                     'bodyFont' => [
-                        'size' => 13
+                        'size' => 13,
                     ],
                     'padding' => 12,
                 ],
@@ -335,13 +334,13 @@ class AccountEvolutionChart extends ChartWidget
                         'usePointStyle' => true,
                         'pointStyle' => 'circle',
                         'font' => [
-                            'size' => 12
+                            'size' => 12,
                         ],
                         'padding' => 15,
                         'boxWidth' => 8,
                         'boxHeight' => 8,
-                    ]
-                ]
+                    ],
+                ],
             ],
         ];
     }

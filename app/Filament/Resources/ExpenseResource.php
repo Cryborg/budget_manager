@@ -2,32 +2,33 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasCustomLabels;
+use App\Filament\Concerns\HasFrequencyCalculation;
 use App\Filament\Resources\ExpenseResource\Pages;
-use App\Filament\Resources\ExpenseResource\RelationManagers;
 use App\Models\Expense;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ExpenseResource extends Resource
 {
+    use HasCustomLabels;
+    use HasFrequencyCalculation;
+
     protected static ?string $model = Expense::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-trending-down';
+
     protected static ?string $navigationLabel = 'Dépenses';
-    protected static ?string $modelLabel = 'dépense';
-    protected static ?string $pluralModelLabel = 'dépenses';
-    
-    public static function getModelLabel(): string
+
+    protected static function getSingularLabel(): string
     {
         return 'dépense';
     }
-    
-    public static function getPluralModelLabel(): string  
+
+    public static function getPluralLabel(): string
     {
         return 'dépenses';
     }
@@ -47,63 +48,14 @@ class ExpenseResource extends Resource
                 Forms\Components\Textarea::make('description')
                     ->label('Description')
                     ->maxLength(500),
-                Forms\Components\TextInput::make('amount')
-                    ->label('Montant')
-                    ->numeric()
-                    ->step(0.01)
-                    ->required()
-                    ->reactive(),
+                static::getAmountFormComponent(),
                 Forms\Components\DatePicker::make('date')
                     ->label('Date')
                     ->required(),
-                Forms\Components\Select::make('frequency')
-                    ->label('Fréquence')
-                    ->options([
-                        'once' => 'Une fois',
-                        'daily' => 'Quotidien',
-                        'weekly' => 'Hebdomadaire',
-                        'monthly' => 'Mensuel',
-                        'yearly' => 'Annuel',
-                    ])
-                    ->default('once')
-                    ->reactive(),
-                Forms\Components\DatePicker::make('start_date')
-                    ->label('Date de début')
-                    ->visible(fn (callable $get) => $get('frequency') !== 'once')
-                    ->default(now())
-                    ->reactive(),
-                Forms\Components\DatePicker::make('end_date')
-                    ->label('Date de fin')
-                    ->visible(fn (callable $get) => $get('frequency') !== 'once')
-                    ->reactive(),
+                ...static::getFrequencyFormComponents(),
                 Forms\Components\Placeholder::make('total_amount')
-                    ->label('Montant total sur la période')
-                    ->visible(fn (callable $get) => $get('frequency') !== 'once' && $get('start_date') && $get('end_date'))
-                    ->content(function (callable $get) {
-                        $amount = $get('amount');
-                        $frequency = $get('frequency');
-                        $startDate = $get('start_date');
-                        $endDate = $get('end_date');
-                        
-                        if (!$amount || !$frequency || !$startDate || !$endDate || $frequency === 'once') {
-                            return 'Remplissez tous les champs pour voir le calcul';
-                        }
-                        
-                        $start = \Carbon\Carbon::parse($startDate);
-                        $end = \Carbon\Carbon::parse($endDate);
-                        
-                        $occurrences = match($frequency) {
-                            'daily' => $start->diffInDays($end) + 1,
-                            'weekly' => $start->diffInWeeks($end) + 1,
-                            'monthly' => $start->diffInMonths($end) + 1,
-                            'yearly' => $start->diffInYears($end) + 1,
-                            default => 1,
-                        };
-                        
-                        $total = $amount * $occurrences;
-                        return number_format($total, 2, ',', ' ') . ' € (' . $occurrences . ' fois)';
-                    })
-                    ->helperText('Calcul automatique basé sur la fréquence et la période'),
+                    ->label('')
+                    ->content(fn (callable $get) => static::getAmountCalculationPlaceholder($get)),
                 Forms\Components\TextInput::make('category')
                     ->label('Catégorie')
                     ->maxLength(255),
@@ -129,14 +81,7 @@ class ExpenseResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('frequency')
                     ->label('Fréquence')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'once' => 'Une fois',
-                        'daily' => 'Quotidien',
-                        'weekly' => 'Hebdomadaire',
-                        'monthly' => 'Mensuel',
-                        'yearly' => 'Annuel',
-                        default => $state,
-                    }),
+                    ->formatStateUsing(fn (string $state): string => static::formatFrequencyForTable($state)),
                 Tables\Columns\TextColumn::make('date')
                     ->label('Date')
                     ->date()

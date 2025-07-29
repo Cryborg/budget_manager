@@ -10,11 +10,11 @@ use Filament\Widgets\TableWidget as BaseWidget;
 class BankAccountsWidget extends BaseWidget
 {
     protected static ?string $heading = 'Aperçu des comptes';
-    
+
     protected static ?int $sort = 4;
-    
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static string $view = 'filament.widgets.bank-accounts-custom';
 
     public function table(Table $table): Table
@@ -34,11 +34,11 @@ class BankAccountsWidget extends BaseWidget
                     ->label('Banque')
                     ->badge()
                     ->color(fn ($record) => $record->bank->color ? 'primary' : 'gray'),
-                    
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Compte')
                     ->weight('bold'),
-                    
+
                 Tables\Columns\TextColumn::make('type')
                     ->label('Type')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -54,7 +54,7 @@ class BankAccountsWidget extends BaseWidget
                         'investment' => 'warning',
                         default => 'gray',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('current_balance')
                     ->label('Solde')
                     ->money('EUR')

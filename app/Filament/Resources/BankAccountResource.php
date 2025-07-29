@@ -3,31 +3,31 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BankAccountResource\Pages;
-use App\Filament\Resources\BankAccountResource\RelationManagers;
 use App\Models\BankAccount;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BankAccountResource extends Resource
 {
     protected static ?string $model = BankAccount::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
+
     protected static ?string $navigationLabel = 'Comptes';
+
     protected static ?string $modelLabel = 'compte';
+
     protected static ?string $pluralModelLabel = 'comptes';
-    
+
     public static function getModelLabel(): string
     {
         return 'compte';
     }
-    
-    public static function getPluralModelLabel(): string  
+
+    public static function getPluralModelLabel(): string
     {
         return 'comptes';
     }

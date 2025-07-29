@@ -14,7 +14,7 @@ class ListExpenses extends ListRecords
     {
         return 'Dépenses';
     }
-    
+
     public function getBreadcrumb(): string
     {
         return 'Liste';
