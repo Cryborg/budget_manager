@@ -23,7 +23,7 @@ class BankAccountsWidget extends BaseWidget
             ->query(
                 BankAccount::query()
                     ->with('bank')
-                    ->where('is_active', true)
+                    ->where('bank_accounts.is_active', true)
                     ->join('banks', 'bank_accounts.bank_id', '=', 'banks.id')
                     ->orderBy('banks.created_at', 'asc')
                     ->orderBy('bank_accounts.name', 'asc')
@@ -68,7 +68,7 @@ class BankAccountsWidget extends BaseWidget
     {
         return BankAccount::query()
             ->with('bank')
-            ->where('is_active', true)
+            ->where('bank_accounts.is_active', true)
             ->join('banks', 'bank_accounts.bank_id', '=', 'banks.id')
             ->orderBy('banks.created_at', 'asc')
             ->orderBy('bank_accounts.name', 'asc')

@@ -28,6 +28,11 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->registration()
+            ->passwordReset()
+            ->emailVerification()
+            ->profile()
+            ->tenant(null, false) // Désactiver le multi-tenancy pour l'instant
             ->colors([
                 'primary' => Color::Amber,
             ])

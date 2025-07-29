@@ -2,8 +2,32 @@
 
 ## Architecture du projet
 - Laravel avec Filament Admin Panel
-- Base de données SQLite
-- Modèles principaux : BankAccount, Income, Expense, Transfer, BalanceAdjustment
+- Base de données MySQL 8.4 (prod) / SQLite (dev)
+- Application multi-utilisateurs avec isolation des données par user_id
+- Modèles principaux : User, Bank, BankAccount, Income, Expense, Transfer, BalanceAdjustment
+
+## Sécurité multi-utilisateurs
+- **Global Scopes** : Tous les modèles Bank et BankAccount ont des global scopes qui filtrent automatiquement par utilisateur connecté
+- **Auto-assignation** : Le user_id est automatiquement assigné lors de la création (via les global scopes)
+- **Isolation complète** : Chaque utilisateur ne voit que ses propres données
+- **Relations sécurisées** : Les modèles Income, Expense, Transfer, BalanceAdjustment héritent de la sécurité via leurs relations avec BankAccount
+
+## Système d'authentification
+- **Enregistrement activé** : Les nouveaux utilisateurs peuvent créer un compte
+- **Vérification email** : Les comptes doivent être vérifiés par email (MustVerifyEmail)
+- **Reset mot de passe** : Système de récupération de mot de passe intégré
+- **Protection anti-spam** : Middleware ThrottleRegistration (max 3 tentatives/heure par IP)
+- **Profile utilisateur** : Les utilisateurs peuvent modifier leurs informations
+- **Locale française** : Interface en français par défaut
+
+## Comptes par défaut
+- **Admin** : Configuré via `.env` (`ADMIN_EMAIL`, `ADMIN_NAME`, `ADMIN_PASSWORD`) - données réelles, admin principal
+- **Marie Test** : `test@budget.local` / `password` (données de test)
+
+## Variables d'environnement importantes
+- `ADMIN_EMAIL` : Email de l'administrateur principal
+- `ADMIN_NAME` : Nom de l'administrateur principal  
+- `ADMIN_PASSWORD` : Mot de passe de l'administrateur principal
 
 ## Widget AccountEvolutionChart
 

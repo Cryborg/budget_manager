@@ -7,13 +7,28 @@ use App\Models\BankAccount;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\Transfer;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Auth;
 
 class InitialDataSeeder extends Seeder
 {
     public function run(): void
     {
+        // Créer l'utilisateur principal Franck s'il n'existe pas
+        $franck = User::firstOrCreate(
+            ['email' => env('ADMIN_EMAIL')],
+            [
+                'name' => env('ADMIN_NAME'),
+                'password' => bcrypt(env('ADMIN_PASSWORD')),
+                'is_admin' => true,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // Se connecter en tant que Franck pour que les global scopes fonctionnent
+        Auth::login($franck);
         // Création des banques
         $bnp = Bank::create([
             'name' => 'BNP Paribas',
@@ -25,6 +40,12 @@ class InitialDataSeeder extends Seeder
             'name' => 'Boursobank',
             'code' => 'BOURSO',
             'color' => '#FF6900',
+        ]);
+
+        $natixis = Bank::create([
+            'name' => 'Natixis',
+            'code' => 'NATIXIS',
+            'color' => '#FF0000',
         ]);
 
         // Création des comptes
@@ -56,6 +77,22 @@ class InitialDataSeeder extends Seeder
             'bank_id' => $boursobank->id,
             'name' => 'Compte Boursobank',
             'type' => 'current',
+            'current_balance' => 90.00,
+            'initial_balance' => 0.00,
+        ]);
+
+        $natixisPEI = BankAccount::create([
+            'bank_id' => $natixis->id,
+            'name' => 'PEI',
+            'type' => 'investment',
+            'current_balance' => 621.67,
+            'initial_balance' => 0.00,
+        ]);
+
+        $natixisPERCOLI = BankAccount::create([
+            'bank_id' => $natixis->id,
+            'name' => 'PERCOLI',
+            'type' => 'investment',
             'current_balance' => 0.00,
             'initial_balance' => 0.00,
         ]);
@@ -65,7 +102,7 @@ class InitialDataSeeder extends Seeder
             'bank_account_id' => $bnpCourant->id,
             'name' => 'Salaire',
             'description' => 'Paie mensuelle',
-            'amount' => 3940.00,
+            'amount' => 3840.00,
             'date' => Carbon::now()->startOfMonth(),
             'frequency' => 'monthly',
             'start_date' => Carbon::now()->startOfMonth(),
@@ -83,6 +120,17 @@ class InitialDataSeeder extends Seeder
             'category' => 'Remboursement',
         ]);
 
+        Income::create([
+            'bank_account_id' => $natixisPEI->id,
+            'name' => 'Abondement Smice',
+            'description' => 'Abondement annuel de l\'entreprise',
+            'amount' => 500.00,
+            'date' => Carbon::now()->startOfYear(),
+            'frequency' => 'yearly',
+            'start_date' => Carbon::now()->startOfYear(),
+            'category' => 'Abondement',
+        ]);
+
         // Dépenses fixes BNP
         $expensesBnp = [
             ['name' => 'Loyer', 'amount' => 1045.00],
@@ -94,6 +142,8 @@ class InitialDataSeeder extends Seeder
             ['name' => 'Assurance Tesla', 'amount' => 51.00],
             ['name' => 'Abonnement Tesla', 'amount' => 10.00],
             ['name' => 'Keepcool (x2)', 'amount' => 50.00],
+            ['name' => 'Remboursement Papa', 'amount' => 500.00],
+            ['name' => 'Préfon', 'amount' => 52.50],
         ];
 
         foreach ($expensesBnp as $expense) {
@@ -183,5 +233,41 @@ class InitialDataSeeder extends Seeder
             'frequency' => 'monthly',
             'start_date' => Carbon::parse('2024-08-01'),
         ]);
+
+        Transfer::create([
+            'from_account_id' => $bnpCourant->id,
+            'to_account_id' => $boursoInternet->id,
+            'name' => 'Transfert',
+            'description' => 'Virement mensuel vers Boursobank',
+            'amount' => 500.00,
+            'date' => Carbon::now()->startOfMonth(),
+            'frequency' => 'monthly',
+            'start_date' => Carbon::now()->startOfMonth(),
+        ]);
+
+        Transfer::create([
+            'from_account_id' => $bnpCourant->id,
+            'to_account_id' => $natixisPEI->id,
+            'name' => 'Plan d\'épargne interentreprises',
+            'description' => 'Virement mensuel vers PEI',
+            'amount' => 134.00,
+            'date' => Carbon::now()->startOfMonth(),
+            'frequency' => 'monthly',
+            'start_date' => Carbon::now()->startOfMonth(),
+        ]);
+
+        Transfer::create([
+            'from_account_id' => $bnpCourant->id,
+            'to_account_id' => $natixisPERCOLI->id,
+            'name' => 'Plan d\'Épargne Retraite Collectif Interentreprises',
+            'description' => 'Virement mensuel vers PERCOLI',
+            'amount' => 167.00,
+            'date' => Carbon::now()->startOfMonth(),
+            'frequency' => 'monthly',
+            'start_date' => Carbon::now()->startOfMonth(),
+        ]);
+
+        // Se déconnecter après les seeds
+        Auth::logout();
     }
 }

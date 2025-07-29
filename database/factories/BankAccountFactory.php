@@ -16,6 +16,7 @@ class BankAccountFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => \App\Models\User::factory(),
             'bank_id' => Bank::factory(),
             'name' => fake()->randomElement(['Compte Courant', 'Livret A', 'Compte Épargne', 'PEL', 'Compte Chèque']),
             'type' => fake()->randomElement(['current', 'savings', 'investment']),
