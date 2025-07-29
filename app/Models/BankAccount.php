@@ -35,7 +35,7 @@ class BankAccount extends Model
     protected static function booted()
     {
         static::creating(function ($model) {
-            if (Auth::check() && !$model->user_id) {
+            if (Auth::check() && ! $model->user_id) {
                 $model->user_id = Auth::id();
             }
         });
@@ -89,6 +89,6 @@ class BankAccount extends Model
      */
     public function isAvailableForTransactions(): bool
     {
-        return $this->is_active && !$this->isBlocked();
+        return $this->is_active && ! $this->isBlocked();
     }
 }

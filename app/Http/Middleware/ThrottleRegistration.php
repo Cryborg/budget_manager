@@ -16,17 +16,18 @@ class ThrottleRegistration
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $key = 'registration:' . $request->ip();
-        
+        $key = 'registration:'.$request->ip();
+
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
+
             return back()->withErrors([
-                'email' => "Trop d'tentatives d'enregistrement. Réessayez dans {$seconds} secondes."
+                'email' => "Trop d'tentatives d'enregistrement. Réessayez dans {$seconds} secondes.",
             ]);
         }
-        
+
         RateLimiter::hit($key, 3600); // 1 heure
-        
+
         return $next($request);
     }
 }

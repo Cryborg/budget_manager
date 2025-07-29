@@ -2,6 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Filament gère toutes les routes
+// La route par défaut redirige vers l'admin
+Route::redirect('/', '/admin');

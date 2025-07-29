@@ -14,10 +14,11 @@ trait HasUserScope
     {
         static::addGlobalScope('user', function (Builder $builder) {
             $userId = Auth::id();
-            
-            if (!$userId) {
+
+            if (! $userId) {
                 // Si personne n'est connecté, aucun résultat ne doit être retourné
                 $builder->whereRaw('0 = 1');
+
                 return;
             }
 
@@ -31,6 +32,6 @@ trait HasUserScope
     protected static function applyUserScopeFilter(Builder $builder, int $userId): void
     {
         // Par défaut, filtrer directement sur user_id
-        $builder->where($builder->getModel()->getTable() . '.user_id', $userId);
+        $builder->where($builder->getModel()->getTable().'.user_id', $userId);
     }
 }

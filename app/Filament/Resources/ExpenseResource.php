@@ -16,9 +16,9 @@ class ExpenseResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-arrow-trending-down';
 
     protected static ?string $navigationLabel = 'Dépenses';
-    
+
     protected static ?string $navigationGroup = 'Finances';
-    
+
     protected static ?int $navigationSort = 2;
 
     protected static function getSingularLabel(): string

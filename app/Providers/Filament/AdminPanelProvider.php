@@ -11,7 +11,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
-use Filament\Navigation\NavigationItem;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -32,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->emailVerification()
             ->profile()
-            ->tenant(null, false) // Désactiver le multi-tenancy pour l'instant
+            // Pas de multi-tenancy pour l'instant
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -55,13 +54,6 @@ class AdminPanelProvider extends PanelProvider
             ->collapsibleNavigationGroups(true)
             ->darkMode()
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
-            ->navigationItems([
-                NavigationItem::make('Thèmes')
-                    ->icon('heroicon-o-paint-brush')
-                    ->group('Paramètres')
-                    ->sort(10)
-                    ->visible(fn (): bool => false), // On va utiliser le dark mode natif
-            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

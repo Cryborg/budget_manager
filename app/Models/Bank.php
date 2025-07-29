@@ -23,7 +23,7 @@ class Bank extends Model
     protected static function booted()
     {
         static::creating(function ($model) {
-            if (Auth::check() && !$model->user_id) {
+            if (Auth::check() && ! $model->user_id) {
                 $model->user_id = Auth::id();
             }
         });

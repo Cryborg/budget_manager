@@ -43,9 +43,9 @@ class Transfer extends Model
             $query->whereHas('fromAccount', function (Builder $subQuery) use ($userId) {
                 $subQuery->where('user_id', $userId);
             })
-            ->orWhereHas('toAccount', function (Builder $subQuery) use ($userId) {
-                $subQuery->where('user_id', $userId);
-            });
+                ->orWhereHas('toAccount', function (Builder $subQuery) use ($userId) {
+                    $subQuery->where('user_id', $userId);
+                });
         });
     }
 

@@ -16,9 +16,9 @@ class IncomeResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-arrow-trending-up';
 
     protected static ?string $navigationLabel = 'Revenus';
-    
+
     protected static ?string $navigationGroup = 'Finances';
-    
+
     protected static ?int $navigationSort = 1;
 
     protected static function getSingularLabel(): string

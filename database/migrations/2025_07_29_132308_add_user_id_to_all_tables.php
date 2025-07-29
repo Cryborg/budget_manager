@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         // Créer un utilisateur par défaut pour les données existantes si aucun n'existe
-        if (!\App\Models\User::exists()) {
+        if (! \App\Models\User::exists()) {
             \App\Models\User::create([
                 'name' => 'Franck',
                 'email' => 'franck@budget.local',
                 'password' => bcrypt('password'),
             ]);
         }
-        
+
         $defaultUserId = \App\Models\User::first()->id;
 
         // Ajouter user_id à la table banks
@@ -29,10 +29,10 @@ return new class extends Migration
             $table->unique(['code', 'user_id']);
         });
 
-        // Ajouter user_id à la table bank_accounts  
+        // Ajouter user_id à la table bank_accounts
         Schema::table('bank_accounts', function (Blueprint $table) use ($defaultUserId) {
             $table->foreignId('user_id')->after('id')->default($defaultUserId)->constrained()->onDelete('cascade');
-            
+
             // Index pour améliorer les performances des requêtes par utilisateur
             $table->index('user_id');
         });
@@ -45,12 +45,12 @@ return new class extends Migration
         Schema::table('banks', function (Blueprint $table) {
             $table->foreignId('user_id')->change();
         });
-        
+
         Schema::table('bank_accounts', function (Blueprint $table) {
             $table->foreignId('user_id')->change();
         });
 
-        // Les autres tables (incomes, expenses, transfers, balance_adjustments) 
+        // Les autres tables (incomes, expenses, transfers, balance_adjustments)
         // n'ont pas besoin de user_id car elles sont liées aux bank_accounts
         // qui ont déjà le user_id
     }

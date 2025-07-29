@@ -4,7 +4,6 @@ namespace Tests\Unit\Concerns;
 
 use App\Filament\Concerns\HasFrequencyCalculation;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Support\HtmlString;
@@ -17,9 +16,10 @@ class HasFrequencyCalculationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Créer une classe anonyme qui utilise le trait
-        $this->traitObject = new class {
+        $this->traitObject = new class
+        {
             use HasFrequencyCalculation;
         };
     }
@@ -59,33 +59,33 @@ class HasFrequencyCalculationTest extends TestCase
 
     public function test_calculate_total_amount_with_zero_amount(): void
     {
-        $get = fn($key) => match($key) {
+        $get = fn ($key) => match ($key) {
             'amount' => 0,
             'frequency' => 'monthly',
             default => null,
         };
 
         $result = $this->traitObject::calculateTotalAmount($get);
-        
+
         $this->assertEquals('Montant total : 0,00 €', $result);
     }
 
     public function test_calculate_total_amount_with_once_frequency(): void
     {
-        $get = fn($key) => match($key) {
+        $get = fn ($key) => match ($key) {
             'amount' => 100.50,
             'frequency' => 'once',
             default => null,
         };
 
         $result = $this->traitObject::calculateTotalAmount($get);
-        
+
         $this->assertEquals('Montant total : 100,50 €', $result);
     }
 
     public function test_calculate_total_amount_without_dates(): void
     {
-        $get = fn($key) => match($key) {
+        $get = fn ($key) => match ($key) {
             'amount' => 250.75,
             'frequency' => 'monthly',
             'start_date' => null,
@@ -94,13 +94,13 @@ class HasFrequencyCalculationTest extends TestCase
         };
 
         $result = $this->traitObject::calculateTotalAmount($get);
-        
+
         $this->assertEquals('Montant par occurrence : 250,75 €', $result);
     }
 
     public function test_calculate_total_amount_with_valid_monthly_period(): void
     {
-        $get = fn($key) => match($key) {
+        $get = fn ($key) => match ($key) {
             'amount' => 100,
             'frequency' => 'monthly',
             'start_date' => '2024-01-01',
@@ -109,13 +109,13 @@ class HasFrequencyCalculationTest extends TestCase
         };
 
         $result = $this->traitObject::calculateTotalAmount($get);
-        
+
         $this->assertEquals('Total sur la période : 300,00 € (3 × 100,00 €)', $result);
     }
 
     public function test_calculate_total_amount_with_valid_daily_period(): void
     {
-        $get = fn($key) => match($key) {
+        $get = fn ($key) => match ($key) {
             'amount' => 10,
             'frequency' => 'daily',
             'start_date' => '2024-01-01',
@@ -124,13 +124,13 @@ class HasFrequencyCalculationTest extends TestCase
         };
 
         $result = $this->traitObject::calculateTotalAmount($get);
-        
+
         $this->assertEquals('Total sur la période : 30,00 € (3 × 10,00 €)', $result);
     }
 
     public function test_calculate_total_amount_with_valid_yearly_period(): void
     {
-        $get = fn($key) => match($key) {
+        $get = fn ($key) => match ($key) {
             'amount' => 1000,
             'frequency' => 'yearly',
             'start_date' => '2024-01-01',
@@ -139,20 +139,20 @@ class HasFrequencyCalculationTest extends TestCase
         };
 
         $result = $this->traitObject::calculateTotalAmount($get);
-        
+
         $this->assertEquals('Total sur la période : 3 000,00 € (3 × 1 000,00 €)', $result);
     }
 
     public function test_get_amount_calculation_placeholder_returns_html_string(): void
     {
-        $get = fn($key) => match($key) {
+        $get = fn ($key) => match ($key) {
             'amount' => 100,
             'frequency' => 'once',
             default => null,
         };
 
         $result = $this->traitObject::getAmountCalculationPlaceholder($get);
-        
+
         $this->assertInstanceOf(HtmlString::class, $result);
         $this->assertStringContainsString('Montant total : 100,00 €', $result->toHtml());
         $this->assertStringContainsString('text-sm text-gray-600 mt-2', $result->toHtml());

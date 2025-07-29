@@ -3,7 +3,6 @@
 namespace Tests\Feature\Resources;
 
 use App\Filament\Resources\IncomeResource;
-use App\Models\BankAccount;
 use App\Models\Income;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -31,10 +30,10 @@ class IncomeResourceTest extends TestCase
 
     public function test_resource_form_components_are_defined(): void
     {
-        // Test que les composants du trait sont bien disponibles  
+        // Test que les composants du trait sont bien disponibles
         $components = IncomeResource::getFrequencyFormComponents();
         $this->assertCount(3, $components);
-        
+
         $amountComponent = IncomeResource::getAmountFormComponent();
         $this->assertEquals('amount', $amountComponent->getName());
     }
@@ -42,7 +41,7 @@ class IncomeResourceTest extends TestCase
     public function test_resource_has_correct_pages(): void
     {
         $pages = IncomeResource::getPages();
-        
+
         $this->assertArrayHasKey('index', $pages);
         $this->assertArrayHasKey('create', $pages);
         $this->assertArrayHasKey('edit', $pages);
@@ -51,7 +50,7 @@ class IncomeResourceTest extends TestCase
     public function test_resource_uses_traits(): void
     {
         $traits = class_uses(IncomeResource::class);
-        
+
         // Depuis la refactorisation, IncomeResource utilise HasFinancialTransactionResource
         // qui inclut les deux traits HasCustomLabels et HasFrequencyCalculation
         $this->assertContains('App\Filament\Concerns\HasFinancialTransactionResource', $traits);
@@ -60,7 +59,7 @@ class IncomeResourceTest extends TestCase
     public function test_resource_frequency_options_are_correct(): void
     {
         $options = IncomeResource::getFrequencyOptions();
-        
+
         $expected = [
             'once' => 'Une fois',
             'daily' => 'Quotidien',
@@ -68,7 +67,7 @@ class IncomeResourceTest extends TestCase
             'monthly' => 'Mensuel',
             'yearly' => 'Annuel',
         ];
-        
+
         $this->assertEquals($expected, $options);
     }
 
@@ -82,7 +81,7 @@ class IncomeResourceTest extends TestCase
     public function test_resource_amount_component_validation(): void
     {
         $component = IncomeResource::getAmountFormComponent();
-        
+
         $this->assertEquals('amount', $component->getName());
         $this->assertEquals('Montant', $component->getLabel());
         $this->assertTrue($component->isNumeric());

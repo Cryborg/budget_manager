@@ -58,7 +58,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(BankAccount::class);
     }
-    
+
     /**
      * Determine if the user can access the Filament admin panel.
      */

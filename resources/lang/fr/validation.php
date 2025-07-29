@@ -8,7 +8,7 @@ return [
         'string' => 'Le champ :attribute doit contenir au moins :min caractères.',
     ],
     'confirmed' => 'La confirmation du champ :attribute ne correspond pas.',
-    
+
     'attributes' => [
         'name' => 'nom',
         'email' => 'adresse email',

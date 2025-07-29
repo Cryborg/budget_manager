@@ -16,7 +16,7 @@ class TransferFactory extends Factory
     public function definition(): array
     {
         $frequency = fake()->randomElement(['once', 'daily', 'weekly', 'monthly', 'yearly']);
-        
+
         return [
             'from_account_id' => BankAccount::factory(),
             'to_account_id' => BankAccount::factory(),

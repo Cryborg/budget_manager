@@ -9,14 +9,15 @@ class HasCustomLabelsTest extends TestCase
 {
     public function test_get_model_label_returns_singular_label(): void
     {
-        $traitObject = new class {
+        $traitObject = new class
+        {
             use HasCustomLabels;
-            
+
             protected static function getSingularLabel(): string
             {
                 return 'test item';
             }
-            
+
             protected static function getPluralLabel(): string
             {
                 return 'test items';
@@ -28,14 +29,15 @@ class HasCustomLabelsTest extends TestCase
 
     public function test_get_plural_model_label_returns_plural_label(): void
     {
-        $traitObject = new class {
+        $traitObject = new class
+        {
             use HasCustomLabels;
-            
+
             protected static function getSingularLabel(): string
             {
                 return 'test item';
             }
-            
+
             protected static function getPluralLabel(): string
             {
                 return 'test items';
@@ -47,14 +49,15 @@ class HasCustomLabelsTest extends TestCase
 
     public function test_trait_works_with_french_labels(): void
     {
-        $traitObject = new class {
+        $traitObject = new class
+        {
             use HasCustomLabels;
-            
+
             protected static function getSingularLabel(): string
             {
                 return 'revenu';
             }
-            
+
             protected static function getPluralLabel(): string
             {
                 return 'revenus';
@@ -67,14 +70,15 @@ class HasCustomLabelsTest extends TestCase
 
     public function test_trait_works_with_complex_labels(): void
     {
-        $traitObject = new class {
+        $traitObject = new class
+        {
             use HasCustomLabels;
-            
+
             protected static function getSingularLabel(): string
             {
                 return 'ajustement de solde';
             }
-            
+
             protected static function getPluralLabel(): string
             {
                 return 'ajustements de solde';

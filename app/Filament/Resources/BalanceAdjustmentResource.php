@@ -17,9 +17,9 @@ class BalanceAdjustmentResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
     protected static ?string $navigationLabel = 'Ajustements de solde';
-    
+
     protected static ?string $navigationGroup = 'Finances';
-    
+
     protected static ?int $navigationSort = 4;
 
     protected static ?string $modelLabel = 'ajustement de solde';
@@ -50,14 +50,16 @@ class BalanceAdjustmentResource extends Resource
                     ->rules([
                         function () {
                             return function (string $attribute, $value, \Closure $fail) {
-                                if (!$value) return;
-                                
+                                if (! $value) {
+                                    return;
+                                }
+
                                 $account = \App\Models\BankAccount::find($value);
-                                if (!$account || $account->user_id !== auth()->id()) {
+                                if (! $account || $account->user_id !== auth()->id()) {
                                     $fail('Le compte bancaire sélectionné ne vous appartient pas.');
                                 }
                             };
-                        }
+                        },
                     ]),
 
                 Forms\Components\DatePicker::make('adjustment_date')

@@ -24,9 +24,9 @@ class TransferResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-arrow-path';
 
     protected static ?string $navigationLabel = 'Virements';
-    
+
     protected static ?string $navigationGroup = 'Finances';
-    
+
     protected static ?int $navigationSort = 3;
 
     protected static function getSingularLabel(): string
@@ -90,19 +90,20 @@ class TransferResource extends Resource
                     ->searchable()
                     ->sortable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder {
                         $tableName = $query->getModel()->getTable();
+
                         return $query
                             ->leftJoin('bank_accounts as from_accounts', function ($join) use ($tableName) {
-                                $join->on('from_accounts.id', '=', $tableName . '.from_account_id');
+                                $join->on('from_accounts.id', '=', $tableName.'.from_account_id');
                             })
                             ->leftJoin('banks as from_banks', 'from_banks.id', '=', 'from_accounts.bank_id')
                             ->orderBy('from_banks.name', $direction)
                             ->orderBy('from_accounts.name', $direction)
-                            ->select($tableName . '.*');
+                            ->select($tableName.'.*');
                     })
                     ->formatStateUsing(function ($record) {
-                        return $record->fromAccount->name . 
-                            '<br><span class="text-xs text-gray-500">' . 
-                            $record->fromAccount->bank->name . 
+                        return $record->fromAccount->name.
+                            '<br><span class="text-xs text-gray-500">'.
+                            $record->fromAccount->bank->name.
                             '</span>';
                     })
                     ->html(),
@@ -111,19 +112,20 @@ class TransferResource extends Resource
                     ->searchable()
                     ->sortable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder {
                         $tableName = $query->getModel()->getTable();
+
                         return $query
                             ->leftJoin('bank_accounts as to_accounts', function ($join) use ($tableName) {
-                                $join->on('to_accounts.id', '=', $tableName . '.to_account_id');
+                                $join->on('to_accounts.id', '=', $tableName.'.to_account_id');
                             })
                             ->leftJoin('banks as to_banks', 'to_banks.id', '=', 'to_accounts.bank_id')
                             ->orderBy('to_banks.name', $direction)
                             ->orderBy('to_accounts.name', $direction)
-                            ->select($tableName . '.*');
+                            ->select($tableName.'.*');
                     })
                     ->formatStateUsing(function ($record) {
-                        return $record->toAccount->name . 
-                            '<br><span class="text-xs text-gray-500">' . 
-                            $record->toAccount->bank->name . 
+                        return $record->toAccount->name.
+                            '<br><span class="text-xs text-gray-500">'.
+                            $record->toAccount->bank->name.
                             '</span>';
                     })
                     ->html(),
@@ -152,8 +154,7 @@ class TransferResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ])
-            ->withPersistence();
+            ]);
     }
 
     public static function getRelations(): array

@@ -16,7 +16,7 @@ class BankFactory extends Factory
     {
         return [
             'user_id' => \App\Models\User::factory(),
-            'name' => fake()->company() . ' Bank',
+            'name' => fake()->company().' Bank',
             'code' => fake()->unique()->regexify('[A-Z]{2}[0-9]{4}'),
             'color' => fake()->hexColor(),
         ];

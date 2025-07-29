@@ -78,17 +78,17 @@ class IncomeExpenseChart extends ChartWidget
                             ->orWhere('start_date', '<=', $date->endOfMonth());
                     });
             })
-            ->orWhere(function ($subQ) use ($date) {
-                // Pour les éléments annuels, vérifier que la date d'occurrence est dans le passé ou présent
-                $subQ->where('frequency', 'yearly')
-                    ->where(function ($dateQ) use ($date) {
-                        $dateQ->whereNull('start_date')
-                            ->orWhere(function ($yearlyQ) use ($date) {
-                                $yearlyQ->whereRaw('MONTH(start_date) = ?', [$date->month])
-                                    ->whereRaw('YEAR(start_date) <= ?', [$date->year]);
-                            });
-                    });
-            });
+                ->orWhere(function ($subQ) use ($date) {
+                    // Pour les éléments annuels, vérifier que la date d'occurrence est dans le passé ou présent
+                    $subQ->where('frequency', 'yearly')
+                        ->where(function ($dateQ) use ($date) {
+                            $dateQ->whereNull('start_date')
+                                ->orWhere(function ($yearlyQ) use ($date) {
+                                    $yearlyQ->whereRaw('MONTH(start_date) = ?', [$date->month])
+                                        ->whereRaw('YEAR(start_date) <= ?', [$date->year]);
+                                });
+                        });
+                });
         });
     }
 
@@ -105,21 +105,21 @@ class IncomeExpenseChart extends ChartWidget
             $amount = is_array($itemData) ? $itemData['amount'] : $itemData;
             $account = is_array($itemData) ? $itemData['account'] : '';
             $item = is_array($itemData) ? ($itemData['income'] ?? $itemData['expense'] ?? null) : $allItems->firstWhere('name', $name);
-            
+
             // Préparer les données pour l'affichage avec compte séparé
             $displayData = [
                 'name' => $name,
-                'account' => $account
+                'account' => $account,
             ];
             $hasEndDate = $item && $item->end_date;
 
-            if (!isset($previousItems[$key])) {
+            if (! isset($previousItems[$key])) {
                 // Nouvel item
                 $details[] = [
                     'type' => 'new',
                     'name' => $displayData['name'],
                     'account' => $displayData['account'],
-                    'amount' => $amount
+                    'amount' => $amount,
                 ];
             } elseif (is_array($previousItems[$key]) ? $previousItems[$key]['amount'] != $amount : $previousItems[$key] != $amount) {
                 // Item modifié
@@ -130,7 +130,7 @@ class IncomeExpenseChart extends ChartWidget
                     'name' => $displayData['name'],
                     'account' => $displayData['account'],
                     'amount' => $amount,
-                    'diff' => $diff
+                    'diff' => $diff,
                 ];
             } elseif ($hasEndDate && $item->end_date) {
                 // Item temporaire inchangé (a une date de fin)
@@ -142,22 +142,22 @@ class IncomeExpenseChart extends ChartWidget
                     'account' => $displayData['account'],
                     'amount' => $amount,
                     'endDate' => $endDate,
-                    'remainingPayments' => $remainingPayments
+                    'remainingPayments' => $remainingPayments,
                 ];
             }
         }
 
         // Items qui se terminent ce mois
         foreach ($previousItems as $key => $itemData) {
-            if (!isset($currentItems[$key])) {
+            if (! isset($currentItems[$key])) {
                 $name = is_array($itemData) ? $itemData['name'] : $key;
                 $account = is_array($itemData) ? $itemData['account'] : '';
-                
+
                 $details[] = [
                     'type' => 'terminated',
                     'name' => $name,
                     'account' => $account,
-                    'terminatedLabel' => $terminatedLabel
+                    'terminatedLabel' => $terminatedLabel,
                 ];
             }
         }
@@ -200,11 +200,11 @@ class IncomeExpenseChart extends ChartWidget
                 Income::where('is_active', true)->where('frequency', '!=', 'once')->with('bankAccount'),
                 $date
             )
-            ->where(function ($q) use ($date) {
-                $q->whereNull('end_date')
-                    ->orWhere('end_date', '>=', $date->startOfMonth());
-            })
-            ->get();
+                ->where(function ($q) use ($date) {
+                    $q->whereNull('end_date')
+                        ->orWhere('end_date', '>=', $date->startOfMonth());
+                })
+                ->get();
 
             $monthlyIncomes = 0;
             $currentIncomes = [];
@@ -215,12 +215,12 @@ class IncomeExpenseChart extends ChartWidget
                 if ($amount > 0) {
                     $monthlyIncomes += $amount;
                     // Créer une clé unique avec le nom et l'ID pour différencier les comptes
-                    $key = $income->name . '_' . $income->id;
+                    $key = $income->name.'_'.$income->id;
                     $currentIncomes[$key] = [
                         'name' => $income->name,
                         'amount' => $amount,
                         'account' => $income->bankAccount->name ?? '',
-                        'income' => $income
+                        'income' => $income,
                     ];
                 }
             }
@@ -233,11 +233,11 @@ class IncomeExpenseChart extends ChartWidget
                 Expense::where('is_active', true)->where('frequency', '!=', 'once')->with('bankAccount'),
                 $date
             )
-            ->where(function ($q) use ($date) {
-                $q->whereNull('end_date')
-                    ->orWhere('end_date', '>=', $date->startOfMonth());
-            })
-            ->get();
+                ->where(function ($q) use ($date) {
+                    $q->whereNull('end_date')
+                        ->orWhere('end_date', '>=', $date->startOfMonth());
+                })
+                ->get();
 
             $monthlyExpenses = 0;
             $currentExpenses = [];
@@ -248,12 +248,12 @@ class IncomeExpenseChart extends ChartWidget
                 if ($amount > 0) {
                     $monthlyExpenses += $amount;
                     // Créer une clé unique avec le nom et l'ID pour différencier les comptes
-                    $key = $expense->name . '_' . $expense->id;
+                    $key = $expense->name.'_'.$expense->id;
                     $currentExpenses[$key] = [
                         'name' => $expense->name,
                         'amount' => $amount,
                         'account' => $expense->bankAccount->name ?? '',
-                        'expense' => $expense
+                        'expense' => $expense,
                     ];
                 }
             }

@@ -17,9 +17,9 @@ class BankAccountResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
 
     protected static ?string $navigationLabel = 'Comptes';
-    
+
     protected static ?string $navigationGroup = 'Paramètres';
-    
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'compte';
@@ -125,10 +125,6 @@ class BankAccountResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ])
-            ->extraAttributes([
-                'data-table-name' => 'bankaccounts',
-                'data-persistence-enabled' => 'true'
             ]);
     }
 

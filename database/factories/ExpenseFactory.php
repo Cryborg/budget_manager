@@ -16,7 +16,7 @@ class ExpenseFactory extends Factory
     public function definition(): array
     {
         $frequency = fake()->randomElement(['once', 'daily', 'weekly', 'monthly', 'yearly']);
-        
+
         return [
             'bank_account_id' => BankAccount::factory(),
             'name' => fake()->randomElement(['Loyer', 'Courses', 'Essence', 'Électricité', 'Internet', 'Assurance', 'Restaurant']),

@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Models;
 
+use App\Models\BalanceAdjustment;
 use App\Models\Bank;
 use App\Models\BankAccount;
-use App\Models\BalanceAdjustment;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\Transfer;
@@ -22,7 +22,7 @@ class BankAccountTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Créer et connecter un utilisateur pour les tests
         $this->user = User::factory()->create();
         Auth::login($this->user);
@@ -33,7 +33,7 @@ class BankAccountTest extends TestCase
         $bank = Bank::factory()->create(['user_id' => $this->user->id]);
         $account = BankAccount::factory()->create([
             'user_id' => $this->user->id,
-            'bank_id' => $bank->id
+            'bank_id' => $bank->id,
         ]);
 
         $this->assertInstanceOf(Bank::class, $account->bank);

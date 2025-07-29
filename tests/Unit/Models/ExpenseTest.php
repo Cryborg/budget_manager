@@ -19,7 +19,7 @@ class ExpenseTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Créer et connecter un utilisateur pour les tests
         $this->user = User::factory()->create();
         Auth::login($this->user);

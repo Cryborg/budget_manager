@@ -15,14 +15,14 @@ class EnsureUserAuthenticated
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             // Pour les API, on peut retourner une erreur JSON
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Vous devez être connecté pour accéder à cette ressource.'
+                    'message' => 'Vous devez être connecté pour accéder à cette ressource.',
                 ], 401);
             }
-            
+
             // Pour les requêtes web, rediriger vers la page de connexion
             return redirect()->guest(route('filament.admin.auth.login'));
         }

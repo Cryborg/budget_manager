@@ -89,7 +89,7 @@ trait HasFrequencyCalculation
         // Compter les échéances réelles en itérant selon la fréquence
         while ($current->lte($end)) {
             $occurrences++;
-            
+
             switch ($frequency) {
                 case 'daily':
                     $current->addDay();

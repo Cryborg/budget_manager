@@ -17,8 +17,6 @@ class AccountEvolutionChart extends ChartWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected static string $view = 'filament.widgets.chart-with-persistence';
-
     public ?string $filter = '24'; // 24 mois par défaut
 
     /**
@@ -59,15 +57,15 @@ class AccountEvolutionChart extends ChartWidget
     {
         if ($item->frequency === 'yearly') {
             // Pour les éléments annuels, vérifier que la date d'occurrence est dans le passé ou présent
-            $startDateCheck = $item->start_date === null || 
+            $startDateCheck = $item->start_date === null ||
                 ($item->start_date->month === $date->month && $item->start_date->year <= $date->year);
         } else {
             // Pour les autres fréquences, logique normale
             $startDateCheck = $item->start_date === null || $item->start_date <= $date->endOfMonth();
         }
-        
+
         $endDateCheck = $item->end_date === null || $item->end_date >= $date->startOfMonth();
-        
+
         return $startDateCheck && $endDateCheck;
     }
 
