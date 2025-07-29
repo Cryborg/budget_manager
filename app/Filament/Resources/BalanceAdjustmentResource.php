@@ -17,6 +17,10 @@ class BalanceAdjustmentResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
     protected static ?string $navigationLabel = 'Ajustements de solde';
+    
+    protected static ?string $navigationGroup = 'Finances';
+    
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $modelLabel = 'ajustement de solde';
 

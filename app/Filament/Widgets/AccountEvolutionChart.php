@@ -338,16 +338,15 @@ class AccountEvolutionChart extends ChartWidget
                 ],
                 'legend' => [
                     'display' => true,
-                    'position' => 'left',
-                    'align' => 'start',
-                    'maxWidth' => 200,
+                    'position' => 'bottom',
+                    'align' => 'center',
                     'labels' => [
                         'usePointStyle' => true,
                         'pointStyle' => 'circle',
                         'font' => [
                             'size' => 12,
                         ],
-                        'padding' => 15,
+                        'padding' => 10,
                         'boxWidth' => 8,
                         'boxHeight' => 8,
                     ],

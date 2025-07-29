@@ -10,6 +10,8 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\MaxWidth;
+use Filament\Navigation\NavigationItem;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -28,6 +30,32 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->colors([
                 'primary' => Color::Amber,
+            ])
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarFullyCollapsibleOnDesktop()
+            ->maxContentWidth(MaxWidth::Full)
+            ->navigationGroups([
+                'Finances',
+                'Paramètres',
+            ])
+            ->userMenuItems([
+                'logout' => \Filament\Navigation\MenuItem::make()
+                    ->label('Déconnexion')
+                    ->icon('heroicon-o-arrow-right-on-rectangle'),
+            ])
+            ->brandName('Budget Manager')
+            ->brandLogo(null)
+            ->favicon(null)
+            ->topNavigation(false)
+            ->collapsibleNavigationGroups(true)
+            ->darkMode()
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->navigationItems([
+                NavigationItem::make('Thèmes')
+                    ->icon('heroicon-o-paint-brush')
+                    ->group('Paramètres')
+                    ->sort(10)
+                    ->visible(fn (): bool => false), // On va utiliser le dark mode natif
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

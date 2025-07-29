@@ -85,40 +85,72 @@ class IncomeExpenseChart extends ChartWidget
     }
 
     /**
-     * Génère les détails formatés pour le tooltip en comparant les données actuelles et précédentes
+     * Génère les détails HTML pour le tooltip en comparant les données actuelles et précédentes
      */
     private function generateTooltipDetails(array $currentItems, array $previousItems, $allItems, Carbon $date, string $terminatedLabel): array
     {
         $details = [];
 
-        foreach ($currentItems as $name => $amount) {
-            // Récupérer l'item pour vérifier s'il a une date de fin
-            $item = $allItems->firstWhere('name', $name);
+        foreach ($currentItems as $key => $itemData) {
+            // Extraire les données selon la nouvelle structure
+            $name = is_array($itemData) ? $itemData['name'] : $key;
+            $amount = is_array($itemData) ? $itemData['amount'] : $itemData;
+            $account = is_array($itemData) ? $itemData['account'] : '';
+            $item = is_array($itemData) ? ($itemData['income'] ?? $itemData['expense'] ?? null) : $allItems->firstWhere('name', $name);
+            
+            // Préparer les données pour l'affichage avec compte séparé
+            $displayData = [
+                'name' => $name,
+                'account' => $account
+            ];
             $hasEndDate = $item && $item->end_date;
 
-            if (!isset($previousItems[$name])) {
+            if (!isset($previousItems[$key])) {
                 // Nouvel item
-                $details[] = '🟢 ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' € (nouveau' . ($terminatedLabel === 'terminée' ? 'elle' : '') . ')';
-            } elseif ($previousItems[$name] != $amount) {
+                $details[] = [
+                    'type' => 'new',
+                    'name' => $displayData['name'],
+                    'account' => $displayData['account'],
+                    'amount' => $amount
+                ];
+            } elseif (is_array($previousItems[$key]) ? $previousItems[$key]['amount'] != $amount : $previousItems[$key] != $amount) {
                 // Item modifié
-                $diff = $amount - $previousItems[$name];
-                $sign = $diff > 0 ? '+' : '';
-                $emoji = $diff > 0 ? '🟡' : '🟠';
-                $details[] = $emoji . ' ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' € (' . $sign . number_format($diff, 2, ',', ' ') . ' €)';
+                $previousAmount = is_array($previousItems[$key]) ? $previousItems[$key]['amount'] : $previousItems[$key];
+                $diff = $amount - $previousAmount;
+                $details[] = [
+                    'type' => 'modified',
+                    'name' => $displayData['name'],
+                    'account' => $displayData['account'],
+                    'amount' => $amount,
+                    'diff' => $diff
+                ];
             } elseif ($hasEndDate && $item->end_date) {
                 // Item temporaire inchangé (a une date de fin)
                 $endDate = $item->end_date->format('d/m/Y');
                 $remainingPayments = $this->calculateRemainingPayments($item->frequency, $date, $item->end_date);
-                $details[] = '🟠 ' . $name . ' : ' . number_format($amount, 2, ',', ' ') . ' €';
-                $details[] = '    📅 Fin le : ' . $endDate;
-                $details[] = '    ⏳ Échéances restantes : ' . $remainingPayments;
+                $details[] = [
+                    'type' => 'temporary',
+                    'name' => $displayData['name'],
+                    'account' => $displayData['account'],
+                    'amount' => $amount,
+                    'endDate' => $endDate,
+                    'remainingPayments' => $remainingPayments
+                ];
             }
         }
 
         // Items qui se terminent ce mois
-        foreach ($previousItems as $name => $amount) {
-            if (!isset($currentItems[$name])) {
-                $details[] = '🔴 ' . $name . ' : ' . $terminatedLabel;
+        foreach ($previousItems as $key => $itemData) {
+            if (!isset($currentItems[$key])) {
+                $name = is_array($itemData) ? $itemData['name'] : $key;
+                $account = is_array($itemData) ? $itemData['account'] : '';
+                
+                $details[] = [
+                    'type' => 'terminated',
+                    'name' => $name,
+                    'account' => $account,
+                    'terminatedLabel' => $terminatedLabel
+                ];
             }
         }
 
@@ -157,7 +189,7 @@ class IncomeExpenseChart extends ChartWidget
 
             // Calculer tous les revenus pour ce mois (toutes fréquences)
             $allIncomes = $this->addDateConstraints(
-                Income::where('is_active', true)->where('frequency', '!=', 'once'),
+                Income::where('is_active', true)->where('frequency', '!=', 'once')->with('bankAccount'),
                 $date
             )
             ->where(function ($q) use ($date) {
@@ -174,7 +206,14 @@ class IncomeExpenseChart extends ChartWidget
                 $amount = $this->getAmountForMonth($income->amount, $income->frequency, $date, $income->date);
                 if ($amount > 0) {
                     $monthlyIncomes += $amount;
-                    $currentIncomes[$income->name] = $amount;
+                    // Créer une clé unique avec le nom et l'ID pour différencier les comptes
+                    $key = $income->name . '_' . $income->id;
+                    $currentIncomes[$key] = [
+                        'name' => $income->name,
+                        'amount' => $amount,
+                        'account' => $income->bankAccount->name ?? '',
+                        'income' => $income
+                    ];
                 }
             }
 
@@ -183,7 +222,7 @@ class IncomeExpenseChart extends ChartWidget
 
             // Calculer toutes les dépenses pour ce mois (toutes fréquences)
             $allExpenses = $this->addDateConstraints(
-                Expense::where('is_active', true)->where('frequency', '!=', 'once'),
+                Expense::where('is_active', true)->where('frequency', '!=', 'once')->with('bankAccount'),
                 $date
             )
             ->where(function ($q) use ($date) {
@@ -200,7 +239,14 @@ class IncomeExpenseChart extends ChartWidget
                 $amount = $this->getAmountForMonth($expense->amount, $expense->frequency, $date, $expense->date);
                 if ($amount > 0) {
                     $monthlyExpenses += $amount;
-                    $currentExpenses[$expense->name] = $amount;
+                    // Créer une clé unique avec le nom et l'ID pour différencier les comptes
+                    $key = $expense->name . '_' . $expense->id;
+                    $currentExpenses[$key] = [
+                        'name' => $expense->name,
+                        'amount' => $amount,
+                        'account' => $expense->bankAccount->name ?? '',
+                        'expense' => $expense
+                    ];
                 }
             }
 
@@ -283,7 +329,7 @@ class IncomeExpenseChart extends ChartWidget
             ],
             'scales' => [
                 'y' => [
-                    'beginAtZero' => true,
+                    'beginAtZero' => false,
                     'grid' => [
                         'display' => true,
                         'color' => 'rgba(255, 255, 255, 0.5)',
@@ -324,24 +370,10 @@ class IncomeExpenseChart extends ChartWidget
             ],
             'plugins' => [
                 'tooltip' => [
-                    'enabled' => true,
+                    'enabled' => false,
                     'mode' => 'index',
                     'intersect' => false,
-                    'backgroundColor' => 'rgba(0, 0, 0, 0.9)',
-                    'titleColor' => '#ffffff',
-                    'bodyColor' => '#ffffff',
-                    'borderColor' => 'rgba(255, 255, 255, 0.3)',
-                    'borderWidth' => 1,
-                    'cornerRadius' => 8,
-                    'displayColors' => true,
-                    'titleFont' => [
-                        'size' => 14,
-                        'weight' => 'bold',
-                    ],
-                    'bodyFont' => [
-                        'size' => 13,
-                    ],
-                    'padding' => 12,
+                    // Le tooltip externe sera configuré via JavaScript
                 ],
                 'legend' => [
                     'display' => true,

@@ -20,6 +20,10 @@ class BankResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-building-library';
 
     protected static ?string $navigationLabel = 'Banques';
+    
+    protected static ?string $navigationGroup = 'Paramètres';
+    
+    protected static ?int $navigationSort = 1;
 
     public static function getSingularLabel(): string
     {

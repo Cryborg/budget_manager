@@ -22,6 +22,10 @@ class TransferResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-arrow-path';
 
     protected static ?string $navigationLabel = 'Virements';
+    
+    protected static ?string $navigationGroup = 'Finances';
+    
+    protected static ?int $navigationSort = 3;
 
     protected static function getSingularLabel(): string
     {

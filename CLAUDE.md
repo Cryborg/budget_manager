@@ -69,6 +69,5 @@
 - Les annotations @property sont importantes pour PHPStan
 
 ## Notes importantes
-- Ne pas utiliser `/resources/views/filament/widgets/large-chart.blade.php` - ce template n'est pas utilisé
 - Les modifications de style doivent se faire dans le template Filament vendor ou dans les options du widget
 - Composer doit être lancé via Sail : `./vendor/bin/sail composer`
