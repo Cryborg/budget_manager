@@ -1,61 +1,116 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 💰 Budget Manager
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Un gestionnaire de budget personnel développé avec Laravel et Filament, permettant de suivre et prévoir l'évolution de vos comptes bancaires.
 
-## About Laravel
+## ✨ Fonctionnalités
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 📊 Vue d'ensemble
+- **Tableau de bord interactif** avec graphique d'évolution des comptes
+- **Prévisions financières** sur 12, 24, 36 mois ou 5 ans
+- **Statistiques en temps réel** des revenus, dépenses et soldes
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 🏦 Gestion des comptes
+- **Multi-banques** : gérez plusieurs établissements bancaires
+- **Multi-comptes** : suivez tous vos comptes (courant, épargne, etc.)
+- **Ajustements de solde** : corrigez les écarts avec la réalité
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 💸 Transactions
+- **Revenus** : salaires, primes, revenus annuels (31/12), etc.
+- **Dépenses** : loyer, courses, abonnements, etc.
+- **Virements** : entre vos différents comptes
+- **Fréquences flexibles** : ponctuel, quotidien, hebdomadaire, mensuel, annuel
 
-## Learning Laravel
+### 📈 Graphique d'évolution
+- **Visualisation interactive** : cliquez sur la légende pour masquer/afficher des comptes
+- **Calculs intelligents** : prise en compte de toutes les fréquences de transactions
+- **Ligne de total** : vue consolidée de votre patrimoine
+- **Responsive** : adapté à tous les écrans
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Installation
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Prérequis
+- PHP 8.1 ou supérieur
+- Composer
+- Node.js & NPM
+- SQLite (ou autre base de données supportée par Laravel)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Étapes d'installation
 
-## Laravel Sponsors
+1. **Cloner le repository**
+```bash
+git clone [url-du-repo]
+cd budget_simulator/budget-manager
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2. **Installer les dépendances PHP**
+```bash
+composer install
+```
 
-### Premium Partners
+3. **Configurer l'environnement**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+4. **Configurer la base de données**
+```bash
+# Créer le fichier SQLite
+touch database/database.sqlite
 
-## Contributing
+# Lancer les migrations
+php artisan migrate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+5. **Installer les dépendances JavaScript**
+```bash
+npm install
+npm run build
+```
 
-## Code of Conduct
+6. **Créer un utilisateur admin**
+```bash
+php artisan make:filament-user
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+7. **Lancer le serveur de développement**
+```bash
+php artisan serve
+```
 
-## Security Vulnerabilities
+Accédez à l'application sur http://localhost:8000/admin
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 📱 Utilisation
 
-## License
+### Premier démarrage
+1. Créez vos banques
+2. Ajoutez vos comptes bancaires avec leur solde actuel
+3. Saisissez vos revenus et dépenses récurrents
+4. Consultez le graphique pour visualiser vos prévisions
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Gestion des transactions
+- **Revenus/Dépenses annuels** : saisissez la date exacte (ex: 31/12) pour qu'ils soient comptés le bon mois
+- **Virements automatiques** : planifiez vos épargnes mensuelles
+- **Dates de début/fin** : gérez les périodes d'activité de chaque transaction
+
+### Ajustements de solde
+Utilisez cette fonctionnalité pour :
+- Corriger les écarts entre vos prévisions et la réalité
+- Prendre en compte des opérations exceptionnelles
+- Recalibrer vos projections
+
+## 🔧 Configuration avancée
+
+### Base de données
+Pour utiliser MySQL ou PostgreSQL au lieu de SQLite :
+1. Modifiez le fichier `.env`
+2. Créez la base de données
+3. Relancez les migrations
+
+## 📄 Licence
+
+Ce projet est sous licence MIT.
+
+---
+
+Développé avec ❤️ pour une meilleure gestion financière personnelle

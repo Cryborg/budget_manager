@@ -23,6 +23,21 @@
 - Padding : défini dans `getOptions()` sous `layout.padding`
 - Légende : interligne défini dans `plugins.legend.labels.padding`
 
+## Widget IncomeExpenseChart
+
+### Tooltips intelligents
+- Affichent uniquement les changements et les revenus/dépenses temporaires (avec date de fin)
+- Format avec sous-puces pour les infos détaillées :
+  - `• Nom : montant`
+  - `  ◦ Fin le : date`
+  - `  ◦ Échéances restantes : nombre`
+- Vue personnalisée dans `/resources/views/filament/widgets/income-expense-chart.blade.php`
+- Gestion des callbacks de tooltip reconfigurés lors des changements de filtre
+
+### Hauteur du graphique
+- Utilise la même condition que AccountEvolutionChart dans le template vendor
+- 480px de hauteur
+
 ## Fréquences disponibles
 - Définies dans les migrations : 'once', 'daily', 'weekly', 'monthly', 'yearly'
 - Les transactions ponctuelles ('once') sont exclues des calculs de prévision

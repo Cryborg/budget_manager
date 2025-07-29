@@ -18,9 +18,6 @@ class AccountEvolutionChart extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-
-
-
     public ?string $filter = '24'; // 24 mois par défaut
 
     /**
@@ -31,7 +28,7 @@ class AccountEvolutionChart extends ChartWidget
         return match($frequency) {
             'once' => 0, // Les montants ponctuels ne sont pas récurrents dans ce contexte
             'daily' => $amount * $date->daysInMonth, // Montant quotidien * nombre de jours dans le mois
-            'weekly' => $amount * 4.33, // Approximation: 4.33 semaines par mois
+            'weekly' => $amount * 4.33, // Approximation : 4.33 semaines par mois
             'monthly' => $amount, // Montant mensuel
             'yearly' => $this->isYearlyOccurence($date, $originalDate) ? $amount : 0, // Montant annuel seulement le bon mois
             default => 0,
@@ -53,6 +50,8 @@ class AccountEvolutionChart extends ChartWidget
             '24' => '24 prochains mois',
             '36' => '3 prochaines années',
             '60' => '5 prochaines années',
+            '120' => '10 prochaines années',
+            '300' => '25 prochaines années',
         ];
     }
 
@@ -89,7 +88,7 @@ class AccountEvolutionChart extends ChartWidget
         foreach ($accounts as $index => $account) {
             $data = [];
             $currentBalance = $account->current_balance; // Partir du solde actuel
-            
+
             // Récupérer tous les ajustements pour ce compte, triés par date
             $adjustments = $account->balanceAdjustments()
                 ->where('is_active', true)

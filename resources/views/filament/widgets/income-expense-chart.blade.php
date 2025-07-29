@@ -55,9 +55,47 @@
                     },
                     is_string($color) ? "fi-color-{$color}" : null,
                 ])
-                @if($this instanceof \App\Filament\Widgets\AccountEvolutionChart || $this instanceof \App\Filament\Widgets\IncomeExpenseChart)
-                    style="height: 480px; min-height: 480px;"
-                @endif
+                style="height: 480px; min-height: 480px;"
+                x-init="() => {
+                    // Attendre que le graphique soit initialisé
+                    setTimeout(() => {
+                        const chartInstance = Alpine.$data($el).getChart();
+                        if (chartInstance) {
+                            const data = @js($this->getCachedData());
+                            
+                            // Fonction pour configurer les tooltips
+                            const setupTooltips = (currentData) => {
+                                if (chartInstance.options.plugins.tooltip.callbacks) {
+                                    chartInstance.options.plugins.tooltip.callbacks.afterLabel = function(context) {
+                                        try {
+                                            const dataIndex = context.dataIndex;
+                                            const datasetIndex = context.datasetIndex;
+                                            
+                                            // Vérifier si on a des détails pour cet index (sparse array)
+                                            if (datasetIndex === 0 && currentData.incomeDetails && currentData.incomeDetails.hasOwnProperty(dataIndex)) {
+                                                return currentData.incomeDetails[dataIndex];
+                                            } else if (datasetIndex === 1 && currentData.expenseDetails && currentData.expenseDetails.hasOwnProperty(dataIndex)) {
+                                                return currentData.expenseDetails[dataIndex];
+                                            }
+                                        } catch (e) {
+                                            console.warn('Tooltip error:', e);
+                                        }
+                                        return [];
+                                    };
+                                }
+                            };
+                            
+                            // Configurer les tooltips initiaux
+                            setupTooltips(data);
+                            chartInstance.update('none');
+                            
+                            // Écouter les changements de données
+                            $wire.on('updateChartData', ({ data: newData }) => {
+                                setupTooltips(newData);
+                            });
+                        }
+                    }, 200);
+                }"
             >
                 <canvas
                     x-ref="canvas"
