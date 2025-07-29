@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BankAccount extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'bank_id',
         'name',
@@ -19,8 +22,8 @@ class BankAccount extends Model
     ];
 
     protected $casts = [
-        'current_balance' => 'decimal:2',
-        'initial_balance' => 'decimal:2',
+        'current_balance' => 'float',
+        'initial_balance' => 'float',
         'is_active' => 'boolean',
     ];
 

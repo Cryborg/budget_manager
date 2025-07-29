@@ -104,7 +104,7 @@ class IncomeExpenseChart extends ChartWidget
 
             // Calculer les revenus actuels
             foreach ($allIncomes as $income) {
-                $amount = $this->getAmountForMonth((float) $income->amount, $income->frequency, $date, $income->date);
+                $amount = $this->getAmountForMonth($income->amount, $income->frequency, $date, $income->date);
                 if ($amount > 0) {
                     $monthlyIncomes += $amount;
                     $currentIncomes[$income->name] = $amount;
@@ -166,7 +166,7 @@ class IncomeExpenseChart extends ChartWidget
 
             // Calculer les dépenses actuelles
             foreach ($allExpenses as $expense) {
-                $amount = $this->getAmountForMonth((float) $expense->amount, $expense->frequency, $date, $expense->date);
+                $amount = $this->getAmountForMonth($expense->amount, $expense->frequency, $date, $expense->date);
                 if ($amount > 0) {
                     $monthlyExpenses += $amount;
                     $currentExpenses[$expense->name] = $amount;

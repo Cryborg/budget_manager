@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -22,6 +23,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Income extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'bank_account_id',
         'name',
@@ -36,7 +39,7 @@ class Income extends Model
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount' => 'float',
         'date' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',

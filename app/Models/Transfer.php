@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transfer extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'from_account_id',
         'to_account_id',
@@ -21,7 +24,7 @@ class Transfer extends Model
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount' => 'float',
         'date' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
