@@ -29,12 +29,14 @@ trait HasFrequencyCalculation
 
             Forms\Components\DatePicker::make('start_date')
                 ->label('Date de début')
-                ->visible(fn (callable $get) => in_array($get('frequency'), ['daily', 'weekly', 'monthly', 'yearly'])),
+                ->visible(fn (callable $get) => in_array($get('frequency'), ['daily', 'weekly', 'monthly', 'yearly']))
+                ->reactive(),
 
             Forms\Components\DatePicker::make('end_date')
                 ->label('Date de fin')
                 ->visible(fn (callable $get) => in_array($get('frequency'), ['daily', 'weekly', 'monthly', 'yearly']))
-                ->after('start_date'),
+                ->after('start_date')
+                ->reactive(),
         ];
     }
 
@@ -61,13 +63,8 @@ trait HasFrequencyCalculation
             $start = \Carbon\Carbon::parse($startDate);
             $end = \Carbon\Carbon::parse($endDate);
 
-            $occurrences = match ($frequency) {
-                'daily' => $start->diffInDays($end) + 1,
-                'weekly' => $start->diffInWeeks($end) + 1,
-                'monthly' => $start->diffInMonths($end) + 1,
-                'yearly' => $start->diffInYears($end) + 1,
-                default => 1,
-            };
+            // Calculer le nombre réel d'échéances selon la fréquence
+            $occurrences = static::calculateOccurrences($start, $end, $frequency);
 
             $total = $amount * $occurrences;
 
@@ -75,6 +72,43 @@ trait HasFrequencyCalculation
         } catch (\Exception $e) {
             return 'Montant par occurrence : '.number_format($amount, 2, ',', ' ').' €';
         }
+    }
+
+    /**
+     * Calcule le nombre réel d'échéances entre deux dates selon la fréquence
+     */
+    protected static function calculateOccurrences(\Carbon\Carbon $start, \Carbon\Carbon $end, string $frequency): int
+    {
+        if ($start->gt($end)) {
+            return 0;
+        }
+
+        $occurrences = 0;
+        $current = $start->copy();
+
+        // Compter les échéances réelles en itérant selon la fréquence
+        while ($current->lte($end)) {
+            $occurrences++;
+            
+            switch ($frequency) {
+                case 'daily':
+                    $current->addDay();
+                    break;
+                case 'weekly':
+                    $current->addWeek();
+                    break;
+                case 'monthly':
+                    $current->addMonth();
+                    break;
+                case 'yearly':
+                    $current->addYear();
+                    break;
+                default:
+                    break 2; // Sortir de la boucle while
+            }
+        }
+
+        return $occurrences;
     }
 
     public static function getAmountCalculationPlaceholder(callable $get): HtmlString
