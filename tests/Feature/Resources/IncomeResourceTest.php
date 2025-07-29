@@ -52,8 +52,9 @@ class IncomeResourceTest extends TestCase
     {
         $traits = class_uses(IncomeResource::class);
         
-        $this->assertContains('App\Filament\Concerns\HasCustomLabels', $traits);
-        $this->assertContains('App\Filament\Concerns\HasFrequencyCalculation', $traits);
+        // Depuis la refactorisation, IncomeResource utilise HasFinancialTransactionResource
+        // qui inclut les deux traits HasCustomLabels et HasFrequencyCalculation
+        $this->assertContains('App\Filament\Concerns\HasFinancialTransactionResource', $traits);
     }
 
     public function test_resource_frequency_options_are_correct(): void
