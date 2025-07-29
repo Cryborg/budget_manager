@@ -17,7 +17,17 @@ class AccountEvolutionChart extends ChartWidget
 
     protected int|string|array $columnSpan = 'full';
 
+    protected static string $view = 'filament.widgets.chart-with-persistence';
+
     public ?string $filter = '24'; // 24 mois par défaut
+
+    /**
+     * Récupère le filtre depuis le localStorage si disponible
+     */
+    public function mount(): void
+    {
+        // Le filtre sera restauré côté client via JavaScript
+    }
 
     /**
      * Calcule le montant pour un mois donné selon la fréquence

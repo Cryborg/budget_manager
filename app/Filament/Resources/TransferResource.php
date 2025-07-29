@@ -152,7 +152,8 @@ class TransferResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->withPersistence();
     }
 
     public static function getRelations(): array

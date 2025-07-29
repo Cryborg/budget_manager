@@ -125,6 +125,10 @@ class BankAccountResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->extraAttributes([
+                'data-table-name' => 'bankaccounts',
+                'data-persistence-enabled' => 'true'
             ]);
     }
 
