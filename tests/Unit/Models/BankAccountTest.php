@@ -8,17 +8,33 @@ use App\Models\BalanceAdjustment;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\Transfer;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class BankAccountTest extends TestCase
 {
     use RefreshDatabase;
 
+    private User $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Créer et connecter un utilisateur pour les tests
+        $this->user = User::factory()->create();
+        Auth::login($this->user);
+    }
+
     public function test_bank_account_belongs_to_bank(): void
     {
-        $bank = Bank::factory()->create();
-        $account = BankAccount::factory()->create(['bank_id' => $bank->id]);
+        $bank = Bank::factory()->create(['user_id' => $this->user->id]);
+        $account = BankAccount::factory()->create([
+            'user_id' => $this->user->id,
+            'bank_id' => $bank->id
+        ]);
 
         $this->assertInstanceOf(Bank::class, $account->bank);
         $this->assertEquals($bank->id, $account->bank->id);
@@ -26,7 +42,7 @@ class BankAccountTest extends TestCase
 
     public function test_bank_account_has_many_incomes(): void
     {
-        $account = BankAccount::factory()->create();
+        $account = BankAccount::factory()->create(['user_id' => $this->user->id]);
         $income = Income::factory()->create(['bank_account_id' => $account->id]);
 
         $this->assertCount(1, $account->incomes);
@@ -36,7 +52,7 @@ class BankAccountTest extends TestCase
 
     public function test_bank_account_has_many_expenses(): void
     {
-        $account = BankAccount::factory()->create();
+        $account = BankAccount::factory()->create(['user_id' => $this->user->id]);
         $expense = Expense::factory()->create(['bank_account_id' => $account->id]);
 
         $this->assertCount(1, $account->expenses);
@@ -46,8 +62,8 @@ class BankAccountTest extends TestCase
 
     public function test_bank_account_has_many_from_transfers(): void
     {
-        $fromAccount = BankAccount::factory()->create();
-        $toAccount = BankAccount::factory()->create();
+        $fromAccount = BankAccount::factory()->create(['user_id' => $this->user->id]);
+        $toAccount = BankAccount::factory()->create(['user_id' => $this->user->id]);
         $transfer = Transfer::factory()->create([
             'from_account_id' => $fromAccount->id,
             'to_account_id' => $toAccount->id,
@@ -60,8 +76,8 @@ class BankAccountTest extends TestCase
 
     public function test_bank_account_has_many_to_transfers(): void
     {
-        $fromAccount = BankAccount::factory()->create();
-        $toAccount = BankAccount::factory()->create();
+        $fromAccount = BankAccount::factory()->create(['user_id' => $this->user->id]);
+        $toAccount = BankAccount::factory()->create(['user_id' => $this->user->id]);
         $transfer = Transfer::factory()->create([
             'from_account_id' => $fromAccount->id,
             'to_account_id' => $toAccount->id,
@@ -74,7 +90,7 @@ class BankAccountTest extends TestCase
 
     public function test_bank_account_has_many_balance_adjustments(): void
     {
-        $account = BankAccount::factory()->create();
+        $account = BankAccount::factory()->create(['user_id' => $this->user->id]);
         $adjustment = BalanceAdjustment::factory()->create(['bank_account_id' => $account->id]);
 
         $this->assertCount(1, $account->balanceAdjustments);

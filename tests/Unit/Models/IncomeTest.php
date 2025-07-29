@@ -4,17 +4,30 @@ namespace Tests\Unit\Models;
 
 use App\Models\BankAccount;
 use App\Models\Income;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class IncomeTest extends TestCase
 {
     use RefreshDatabase;
 
+    private User $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Créer et connecter un utilisateur pour les tests
+        $this->user = User::factory()->create();
+        Auth::login($this->user);
+    }
+
     public function test_income_belongs_to_bank_account(): void
     {
-        $account = BankAccount::factory()->create();
+        $account = BankAccount::factory()->create(['user_id' => $this->user->id]);
         $income = Income::factory()->create(['bank_account_id' => $account->id]);
 
         $this->assertInstanceOf(BankAccount::class, $income->bankAccount);
